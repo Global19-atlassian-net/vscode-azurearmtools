@@ -48,11 +48,11 @@ export abstract class DeploymentDocument implements IJsonDocument {
         if (positionOrRange instanceof Span) {
             return __debugMarkRangeInString(this.documentText, positionOrRange.startIndex, positionOrRange.length);
         } else if (positionOrRange instanceof Range) {
-            const startIndex = this.getDocumentCharacterIndex(positionOrRange.start.line, positionOrRange.start.character);
-            const endIndex = this.getDocumentCharacterIndex(positionOrRange.end.line, positionOrRange.end.character);
+            const startIndex = this.getDocumentCharacterIndex(positionOrRange.start.line, positionOrRange.start.character, { allowOutOfBounds: true });
+            const endIndex = this.getDocumentCharacterIndex(positionOrRange.end.line, positionOrRange.end.character, { allowOutOfBounds: true });
             return __debugMarkRangeInString(this.documentText, startIndex, endIndex - startIndex);
         } else if (positionOrRange instanceof Position) {
-            const index = this.getDocumentCharacterIndex(positionOrRange.line, positionOrRange.character);
+            const index = this.getDocumentCharacterIndex(positionOrRange.line, positionOrRange.character, { allowOutOfBounds: true });
             return __debugMarkPositionInString(this.documentText, index);
         } else {
             return __debugMarkPositionInString(this.documentText, positionOrRange);
@@ -144,8 +144,8 @@ export abstract class DeploymentDocument implements IJsonDocument {
 
     public abstract getContextFromDocumentCharacterIndex(documentCharacterIndex: number, associatedTemplate: DeploymentDocument | undefined): PositionContext;
 
-    public getDocumentCharacterIndex(documentLineIndex: number, documentColumnIndex: number): number {
-        return this._jsonParseResult.getCharacterIndex(documentLineIndex, documentColumnIndex);
+    public getDocumentCharacterIndex(documentLineIndex: number, documentColumnIndex: number, options?: { allowOutOfBounds?: boolean }): number {
+        return this._jsonParseResult.getCharacterIndex(documentLineIndex, documentColumnIndex, options);
     }
 
     public getDocumentPosition(documentCharacterIndex: number): LineColPos {
@@ -188,6 +188,7 @@ export abstract class DeploymentDocument implements IJsonDocument {
         parameterValuesSourceProvider: IParameterValuesSourceProvider | undefined
     ): ResolvableCodeLens[];
 
+    //asdf
     // CONSIDER: Should we cache?  But that cache would depend on associatedTemplate not changing, not sure if that's
     // guaranteed.
     // Consider whether associated document should be a function passed in to constructor so that it's a permanent part of the

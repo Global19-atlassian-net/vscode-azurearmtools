@@ -1,3 +1,4 @@
+//asdf???  I had deleted this...
 // ----------------------------------------------------------------------------
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 // ----------------------------------------------------------------------------
@@ -9,7 +10,7 @@ import { isWin32 } from "../extension.bundle";
 import { testDiagnostics, testDiagnosticsFromFile } from "./support/diagnostics";
 import { testWithLanguageServer } from "./support/testWithLanguageServer";
 
-suite("Linked templates", () => {
+suite("Linked templates regressions", () => {
     suite("variables and parameters inside templateLink object refer to the parent's scope", () => {
         testWithLanguageServer('Regress #792: Regression from 0.10.0: top-level parameters not recognized in nested template properties', async () => {
             await testDiagnosticsFromFile(
@@ -70,6 +71,7 @@ suite("Linked templates", () => {
         });
     });
 
+    //asdf error location changed
     suite("Error location inside linked and nested templates", async () => {
         // tslint:disable-next-line: no-suspicious-comment
         // TODO: For some reason, these two tests are failing consistently in the
@@ -119,7 +121,7 @@ suite("Linked templates", () => {
                         }
                     },
                     [
-                        "Error: Template validation failed: Template parameter JToken type is not valid. Expected 'String, Uri'. Actual 'Integer'. Please see https://aka.ms/arm-deploy/#parameter-file for usage details. (arm-template (validation)) [9,21-9,21] [The error occurred in a nested template near here] [14,40-14,40]",
+                        "Error: Template validation failed: Template parameter JToken type is not valid. Expected 'String, Uri'. Actual 'Integer'. Please see https://aka.ms/arm-deploy/#parameter-file for usage details. (arm-template (validation)) [9,21-9,21] [The error occurred in a nested template near here] [13,19-13,19]",
                         "Warning: The parameter 'parameter1' is never used. (arm-template (expressions)) [23,13-23,25]"
                     ]
                 );
