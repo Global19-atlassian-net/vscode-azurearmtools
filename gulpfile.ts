@@ -44,8 +44,11 @@ const env = process.env;
 
 const preserveStagingFolder = !!env.ARMTOOLS_PRESERVE_STAGING_FOLDER;
 
+// Points to a local path to retrieve the language server from when packaging
+const languageServerPackagingPath = env.LANGUAGE_SERVER_PACKAGING_PATH;
+
 // Official builds will download and include the language server bits (which are licensed differently than the code in the public repo)
-const packageLanguageServer = !env.DISABLE_LANGUAGE_SERVER && !!env.LANGSERVER_NUGET_USERNAME && !!env.LANGSERVER_NUGET_PASSWORD;
+const packageLanguageServer = !env.DISABLE_LANGUAGE_SERVER && (languageServerPackagingPath || (!!env.LANGSERVER_NUGET_USERNAME && !!env.LANGSERVER_NUGET_PASSWORD));
 
 const publicLicenseFileName = 'LICENSE.md';
 const languageServerLicenseFileName = 'License.txt';
@@ -160,44 +163,51 @@ function executeInShell(command: string): void {
 
 async function getLanguageServer(): Promise<void> {
     if (packageLanguageServer) {
-        console.log(`Retrieving language server ${languageServerNugetPackage}@${languageServerVersion}`);
+        let srcPath: string;
+        if (languageServerPackagingPath) {
+            console.warn(`WARNING: Retrieving language server from local path ${languageServerPackagingPath}`);
+            srcPath = languageServerPackagingPath;
+        } else {
+            console.log(`Retrieving language server ${languageServerNugetPackage}@${languageServerVersion}`);
 
-        // Create temporary config file with credentials
-        const config = fse.readFileSync(path.join(__dirname, 'NuGet.Config')).toString();
-        const withCreds = config.
-            // tslint:disable-next-line: strict-boolean-expressions
-            replace('$LANGSERVER_NUGET_USERNAME', env.LANGSERVER_NUGET_USERNAME || '').
-            // tslint:disable-next-line: strict-boolean-expressions
-            replace('$LANGSERVER_NUGET_PASSWORD', env.LANGSERVER_NUGET_PASSWORD || '');
-        const configPath = getTempFilePath('nuget', '.config');
-        fse.writeFileSync(configPath, withCreds);
+            // Create temporary config file with credentials
+            const config = fse.readFileSync(path.join(__dirname, 'NuGet.Config')).toString();
+            const withCreds = config.
+                // tslint:disable-next-line: strict-boolean-expressions
+                replace('$LANGSERVER_NUGET_USERNAME', env.LANGSERVER_NUGET_USERNAME || '').
+                // tslint:disable-next-line: strict-boolean-expressions
+                replace('$LANGSERVER_NUGET_PASSWORD', env.LANGSERVER_NUGET_PASSWORD || '');
+            const configPath = getTempFilePath('nuget', '.config');
+            fse.writeFileSync(configPath, withCreds);
 
-        // Nuget install to pkgs folder
-        let app = 'nuget';
-        const args = [
-            'install',
-            languageServerNugetPackage,
-            '-Version', languageServerVersion,
-            '-Framework', `netcoreapp${langServerDotnetVersion}`,
-            '-OutputDirectory', 'pkgs',
-            //'-Verbosity', 'detailed',
-            '-ExcludeVersion', // Keeps the package version from being included in the output folder name
-            '-NonInteractive',
-            '-ConfigFile', configPath
-        ];
-        if (os.platform() === 'linux') {
-            app = 'mono';
-            args.unshift('nuget.exe');
+            // Nuget install to pkgs folder
+            let app = 'nuget';
+            const args = [
+                'install',
+                languageServerNugetPackage,
+                '-Version', languageServerVersion,
+                '-Framework', `netcoreapp${langServerDotnetVersion}`,
+                '-OutputDirectory', 'pkgs',
+                //'-Verbosity', 'detailed',
+                '-ExcludeVersion', // Keeps the package version from being included in the output folder name
+                '-NonInteractive',
+                '-ConfigFile', configPath
+            ];
+            if (os.platform() === 'linux') {
+                app = 'mono';
+                args.unshift('nuget.exe');
+            }
+            const command = `${app} ${args.join(' ')}`;
+            executeInShell(command);
+            fse.unlinkSync(configPath);
+
+            // Copy binaries and license into dist\languageServer
+            console.log(`Removing ${languageServerFolderName}`);
+            rimraf.sync(languageServerFolderName);
+            console.log(`Copying language server binaries to ${languageServerFolderName}`);
+            srcPath = path.join(__dirname, 'pkgs', languageServerNugetPackage, 'lib', `netcoreapp${langServerDotnetVersion}`);
         }
-        const command = `${app} ${args.join(' ')}`;
-        executeInShell(command);
-        fse.unlinkSync(configPath);
 
-        // Copy binaries and license into dist\languageServer
-        console.log(`Removing ${languageServerFolderName}`);
-        rimraf.sync(languageServerFolderName);
-        console.log(`Copying language server binaries to ${languageServerFolderName}`);
-        const srcPath = path.join(__dirname, 'pkgs', languageServerNugetPackage, 'lib', `netcoreapp${langServerDotnetVersion}`);
         let destPath = path.join(__dirname, languageServerFolderName);
         fse.mkdirpSync(destPath);
         copyFolder(srcPath, destPath);

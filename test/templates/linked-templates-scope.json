@@ -4,7 +4,7 @@
     "parameters": {
         "linkedTemplatesLocation": {
             "type": "string",
-            "defaultValue": "https://raw.githubusercontent.com/StephenWeatherford/template-examples/master/linkedTemplates/twoLinked/templates/library"
+            "defaultValue": "https://raw.githubusercontent.com/StephenWeatherford/template-examples/master/linkedTemplates/twoLinked/templates/library" //asdf???
         },
         "intvalue": {
             "type": "int",
@@ -16,8 +16,7 @@
         "secondTemplate": "linkedTemplate2.json",
         "stringValue": "abc",
         "nestedDeployment2Name": "nestedDeployment2",
-        "mode": "Incremental",
-        "contentVersion": "1.2.3.4"
+        "mode": "Incremental"
     },
     "resources": [
         {
@@ -29,7 +28,7 @@
                 "templateLink": {
                     // THESE REFER TO THE TOP-LEVEL PARAMS/VARS
                     "uri": "[concat(parameters('linkedTemplatesLocation'), '/', variables('secondTemplate'))]",
-                    "contentVersion": "[variables('contentVersion')]"
+                    "contentVersion": "1.2.3.4" 
                 },
                 "parameters": {
                     "linked2param1": {

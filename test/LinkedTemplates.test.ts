@@ -1,3 +1,4 @@
+//asdf???  I had deleted this...
 // ----------------------------------------------------------------------------
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 // ----------------------------------------------------------------------------
@@ -9,7 +10,7 @@ import { isWin32 } from "../extension.bundle";
 import { testDiagnostics, testDiagnosticsFromFile } from "./support/diagnostics";
 import { testWithLanguageServer } from "./support/testWithLanguageServer";
 
-suite("Linked templates", () => {
+suite("Linked templates regressions", () => {
     suite("variables and parameters inside templateLink object refer to the parent's scope", () => {
         testWithLanguageServer('Regress #792: Regression from 0.10.0: top-level parameters not recognized in nested template properties', async () => {
             await testDiagnosticsFromFile(
@@ -70,6 +71,7 @@ suite("Linked templates", () => {
         });
     });
 
+    //asdf error location changed
     suite("Error location inside linked and nested templates", async () => {
         // tslint:disable-next-line: no-suspicious-comment
         // TODO: For some reason, these two tests are failing consistently in the

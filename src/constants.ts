@@ -52,6 +52,22 @@ export namespace configKeys {
     export const codeLensForResourceParentsAndChildren = 'codelens.resourceChildren';
 }
 
+export namespace notifications {
+    export const requestOpenLinkedTemplate = 'arm-template/requestOpenLinkedTemplate';
+    export const notifyTemplateGraph = 'arm-template/notifyTemplateGraph';
+
+    export namespace Diagnostics {
+        export const codeAnalysisStarting = 'arm-template/diag-codeAnalysisStarting';
+
+        export interface ICodeAnalysisStartingArgs {
+            uri: string;
+            docVersion: number;
+            codeAnalysisVersion: number;
+
+        }
+    }
+}
+
 export namespace globalStateKeys {
     // Set of files to not ask about using the newest schema
     export const dontAskAboutSchemaFiles = 'dontAskAboutSchemaFiles';
@@ -106,3 +122,5 @@ export namespace templateKeys {
     export const userFunctionNamespace = 'namespace';
     export const userFunctionMembers = 'members';
 }
+
+export const deploymentsResourceTypeLC: string = 'microsoft.resources/deployments';

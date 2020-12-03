@@ -6,7 +6,9 @@
 
 import { Range, Uri } from 'vscode';
 import { parseError } from 'vscode-azureextensionui';
+import { ILinkedTemplateReference, LinkedFileLoadState } from "../../ILinkedTemplateReference";
 import { Span } from '../../language/Span';
+import { assertNever } from '../../util/assertNever';
 import { pathExists } from '../../util/pathExists';
 import { IGotoParameterValueArgs } from '../../vscodeIntegration/commandArguments';
 import { getVSCodeRangeFromSpan } from '../../vscodeIntegration/vscodePosition';
@@ -97,7 +99,7 @@ export class ParameterDefinitionCodeLens extends ResolvableCodeLens {
         let paramsSource: IParameterValuesSource | undefined;
         let errorMessage: string | undefined;
         try {
-            paramsSource = await this.parameterValuesSourceProvider.getValuesSource();
+            paramsSource = await this.parameterValuesSourceProvider.getValuesSource(); //asdf resolved laziliy here
         } catch (err) {
             if (this.parameterValuesSourceProvider.parameterFileUri) {
                 if (!await pathExists(this.parameterValuesSourceProvider.parameterFileUri)) {
@@ -217,8 +219,33 @@ export class LinkedTemplateCodeLens extends ResolvableCodeLens {
         };
     }
 
-    public static create(scope: TemplateScope, span: Span): LinkedTemplateCodeLens {
-        return new LinkedTemplateCodeLens(scope, span, "Linked template");
+    public static create(scope: TemplateScope, span: Span, linkedTemplateReferences: ILinkedTemplateReference[] | undefined): LinkedTemplateCodeLens {
+        let title = "Linked template";
+
+        if (linkedTemplateReferences && linkedTemplateReferences.length > 0) {
+            const ref = linkedTemplateReferences[0];
+            title += `: "${ref.originalPath}"`;
+
+            let loadState: string;
+            switch (ref.loadState) {
+                case LinkedFileLoadState.LoadFailed: loadState = `${ref.loadErrorMessage ?? 'Load failed'}`; break;
+                case LinkedFileLoadState.Loading: loadState = "Loading..."; break;
+                case LinkedFileLoadState.NotLoaded: loadState = "Not loaded"; break;
+                case LinkedFileLoadState.NotSupported: loadState = ""; break;
+                case LinkedFileLoadState.SuccessfullyLoaded: loadState = "Loaded"; break;
+                case LinkedFileLoadState.TooDeep: loadState = ""; break;
+                default:
+                    assertNever(ref.loadState);
+            }
+
+            if (loadState) {
+                title += ` (${loadState})`;
+            }
+
+            title += ` ${JSON.stringify(ref.parameterValues)}`;
+        }
+
+        return new LinkedTemplateCodeLens(scope, span, title);
     }
 
     public async resolve(): Promise<boolean> {
