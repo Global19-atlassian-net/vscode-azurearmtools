@@ -3,6 +3,8 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+//asdf test folder shouldn't get packaged
+
 // tslint:disable:no-unsafe-any no-console prefer-template no-implicit-dependencies export-name
 
 import * as assert from 'assert';
@@ -28,13 +30,14 @@ import rimraf = require('rimraf');
 // tslint:enable:no-require-imports
 
 const filesAndFoldersToPackage: string[] = [
+    // NOTE: License.txt and languageServer folder are handled separately so should not be in this list
     'dist',
     'assets',
     'icons',
     'AzureRMTools128x128.png',
     'CHANGELOG.md',
     'main.js',
-    'NOTICE.html', // License.{md,txt} is handled specially
+    'NOTICE.html',
     'node_modules', // Must be present for vsce package to work, but will be ignored during packaging
     'README.md',
     '.vscodeignore'
@@ -48,7 +51,7 @@ const preserveStagingFolder = !!env.ARMTOOLS_PRESERVE_STAGING_FOLDER;
 const languageServerPackagingPath = env.LANGUAGE_SERVER_PACKAGING_PATH;
 
 // Official builds will download and include the language server bits (which are licensed differently than the code in the public repo)
-const packageLanguageServer = !env.DISABLE_LANGUAGE_SERVER && (languageServerPackagingPath || (!!env.LANGSERVER_NUGET_USERNAME && !!env.LANGSERVER_NUGET_PASSWORD));
+const languageServerAvailable = !env.DISABLE_LANGUAGE_SERVER && (languageServerPackagingPath || (!!env.LANGSERVER_NUGET_USERNAME && !!env.LANGSERVER_NUGET_PASSWORD));
 
 const publicLicenseFileName = 'LICENSE.md';
 const languageServerLicenseFileName = 'License.txt';
@@ -162,62 +165,58 @@ function executeInShell(command: string): void {
 }
 
 async function getLanguageServer(): Promise<void> {
-    if (packageLanguageServer) {
-        let srcPath: string;
-        if (languageServerPackagingPath) {
-            console.warn(`WARNING: Retrieving language server from local path ${languageServerPackagingPath}`);
-            srcPath = languageServerPackagingPath;
-        } else {
-            console.log(`Retrieving language server ${languageServerNugetPackage}@${languageServerVersion}`);
+    if (languageServerAvailable) {
+        const pkgsPath = path.join(__dirname, 'pkgs');
 
-            // Create temporary config file with credentials
-            const config = fse.readFileSync(path.join(__dirname, 'NuGet.Config')).toString();
-            const withCreds = config.
-                // tslint:disable-next-line: strict-boolean-expressions
-                replace('$LANGSERVER_NUGET_USERNAME', env.LANGSERVER_NUGET_USERNAME || '').
-                // tslint:disable-next-line: strict-boolean-expressions
-                replace('$LANGSERVER_NUGET_PASSWORD', env.LANGSERVER_NUGET_PASSWORD || '');
-            const configPath = getTempFilePath('nuget', '.config');
-            fse.writeFileSync(configPath, withCreds);
+        const destPath = path.join(__dirname, languageServerFolderName);
 
-            // Nuget install to pkgs folder
-            let app = 'nuget';
-            const args = [
-                'install',
-                languageServerNugetPackage,
-                '-Version', languageServerVersion,
-                '-Framework', `netcoreapp${langServerDotnetVersion}`,
-                '-OutputDirectory', 'pkgs',
-                //'-Verbosity', 'detailed',
-                '-ExcludeVersion', // Keeps the package version from being included in the output folder name
-                '-NonInteractive',
-                '-ConfigFile', configPath
-            ];
-            if (os.platform() === 'linux') {
-                app = 'mono';
-                args.unshift('nuget.exe');
-            }
-            const command = `${app} ${args.join(' ')}`;
-            executeInShell(command);
-            fse.unlinkSync(configPath);
+        console.log(`Retrieving language server ${languageServerNugetPackage}@${languageServerVersion}`);
 
-            // Copy binaries and license into dist\languageServer
-            console.log(`Removing ${languageServerFolderName}`);
-            rimraf.sync(languageServerFolderName);
-            console.log(`Copying language server binaries to ${languageServerFolderName}`);
-            srcPath = path.join(__dirname, 'pkgs', languageServerNugetPackage, 'lib', `netcoreapp${langServerDotnetVersion}`);
+        // Create temporary config file with credentials
+        const config = fse.readFileSync(path.join(__dirname, 'NuGet.Config')).toString();
+        const withCreds = config.
+            // tslint:disable-next-line: strict-boolean-expressions
+            replace('$LANGSERVER_NUGET_USERNAME', env.LANGSERVER_NUGET_USERNAME || '').
+            // tslint:disable-next-line: strict-boolean-expressions
+            replace('$LANGSERVER_NUGET_PASSWORD', env.LANGSERVER_NUGET_PASSWORD || '');
+        const configPath = getTempFilePath('nuget', '.config');
+        fse.writeFileSync(configPath, withCreds);
+
+        // Nuget install to pkgs folder
+        let app = 'nuget';
+        const args = [
+            'install',
+            languageServerNugetPackage,
+            '-Version', languageServerVersion,
+            '-Framework', `netcoreapp${langServerDotnetVersion}`,
+            '-OutputDirectory', 'pkgs',
+            //'-Verbosity', 'detailed',
+            '-ExcludeVersion', // Keeps the package version from being included in the output folder name
+            '-NonInteractive',
+            '-ConfigFile', configPath
+        ];
+        if (os.platform() === 'linux') {
+            app = 'mono';
+            args.unshift('nuget.exe');
         }
+        const command = `${app} ${args.join(' ')}`;
+        executeInShell(command);
+        fse.unlinkSync(configPath);
 
-        let destPath = path.join(__dirname, languageServerFolderName);
+        // Copy binaries and license into dist\languageServer
+        console.log(`Removing ${languageServerFolderName}`);
+        rimraf.sync(languageServerFolderName);
+
+        console.log(`Copying language server binaries to ${languageServerFolderName}`);
+        const langServerSourcePath = path.join(pkgsPath, languageServerNugetPackage, 'lib', `netcoreapp${langServerDotnetVersion}`);
+        const licenseSourcePath = path.join(pkgsPath, languageServerNugetPackage, languageServerLicenseFileName);
+
         fse.mkdirpSync(destPath);
-        copyFolder(srcPath, destPath);
+        copyFolder(langServerSourcePath, destPath);
 
-        if (packageLanguageServer) {
-            const licenseSrc = path.join(__dirname, 'pkgs', languageServerNugetPackage, languageServerLicenseFileName);
-            const licenseDest = path.join(languageServerFolderName, languageServerLicenseFileName);
-            console.log(`Copying language server license ${licenseSrc} to ${licenseDest}`);
-            fse.copyFileSync(licenseSrc, licenseDest);
-        }
+        const licenseDest = path.join(languageServerFolderName, languageServerLicenseFileName);
+        console.log(`Copying language server license ${licenseSourcePath} to ${licenseDest}`);
+        fse.copyFileSync(licenseSourcePath, licenseDest);
 
         console.log(`Language server binaries and license are in ${languageServerFolderName}`);
     } else {
@@ -232,6 +231,7 @@ function copyFolder(sourceFolder: string, destFolder: string, sourceRoot: string
         let src = path.join(sourceFolder, fn);
         let dest = path.join(destFolder, fn);
         if (fse.statSync(src).isFile()) {
+            // console.log(`Copying file ${src} to ${dest}`);
             fse.copyFileSync(src, dest);
         } else if (fse.statSync(src).isDirectory()) {
             copyFolder(src, dest, sourceRoot);
@@ -243,12 +243,16 @@ function copyFolder(sourceFolder: string, destFolder: string, sourceRoot: string
 
 async function packageVsix(): Promise<void> {
     // We use a staging folder so we have more control over exactly what goes into the .vsix
-    function copyToStagingFolder(relativeSource: string, relativeDest: string = relativeSource): void {
-        console.log(`Copying ${relativeSource} to staging folder`);
-        if (fse.statSync(relativeSource).isDirectory()) {
-            copyFolder(path.join(__dirname, relativeSource), path.join(stagingFolder, relativeDest));
+    function copyToStagingFolder(relativeOrAbsSource: string, relativeDest: string): void {
+        const absSource = path.resolve(__dirname, relativeOrAbsSource);
+        const absDest = path.join(stagingFolder, relativeDest);
+
+        if (fse.statSync(absSource).isDirectory()) {
+            console.log(`Copying folder ${absSource} to staging folder`);
+            copyFolder(absSource, absDest);
         } else {
-            fse.copyFileSync(path.join(__dirname, relativeSource), path.join(stagingFolder, relativeDest));
+            console.log(`Copying file ${absSource} to staging folder`);
+            fse.copyFileSync(absSource, absDest);
         }
     }
 
@@ -258,21 +262,36 @@ async function packageVsix(): Promise<void> {
 
     // Copy files/folders to staging
     for (let p of filesAndFoldersToPackage) {
-        copyToStagingFolder(p);
+        copyToStagingFolder(p, p);
     }
     let filesInStaging = fse.readdirSync(stagingFolder);
     filesInStaging.forEach(fn => assert(!/license/i.test(fn), `Should not have copied the original license file into staging: ${fn}`));
 
     let expectedLicenseFileName: string;
-    if (packageLanguageServer) {
+    if (languageServerAvailable) {
+        let languageServerSourcePath: string;
+        let licenseSourcePath: string;
+
+        if (languageServerPackagingPath) {
+            console.warn(`========== WARNING ==========: Packaging language server from local path instead of NuGet location`);
+            languageServerSourcePath = languageServerPackagingPath;
+            licenseSourcePath = path.join(languageServerPackagingPath, '../../../../..', languageServerLicenseFileName);
+        } else {
+            languageServerSourcePath = path.join(__dirname, languageServerFolderName);
+            licenseSourcePath = path.join(__dirname, languageServerFolderName, languageServerLicenseFileName);
+        }
+        console.warn(`  Language server source path: ${languageServerSourcePath}`);
+        console.warn(`  License source path: ${licenseSourcePath}`);
+
         // Copy language server bits
-        copyToStagingFolder(languageServerFolderName);
+        copyToStagingFolder(languageServerSourcePath, languageServerFolderName);
 
         // Copy license to staging main folder
-        copyToStagingFolder(path.join(languageServerFolderName, languageServerLicenseFileName), languageServerLicenseFileName);
+        copyToStagingFolder(licenseSourcePath, languageServerLicenseFileName);
         expectedLicenseFileName = languageServerLicenseFileName;
     } else {
-        copyToStagingFolder(publicLicenseFileName);
+        // No language server available - jusy copy license.md to staging main folder
+        copyToStagingFolder(publicLicenseFileName, languageServerFolderName);
         expectedLicenseFileName = publicLicenseFileName;
     }
 
@@ -300,7 +319,7 @@ async function packageVsix(): Promise<void> {
         throw new Error("Couldn't find a .vsix file");
     }
     let vsixDestPath = path.join(__dirname, vsixName);
-    if (!packageLanguageServer) {
+    if (!languageServerAvailable) {
         vsixDestPath = vsixDestPath.replace('.vsix', '-no-languageserver.vsix');
     }
     if (fse.existsSync(vsixDestPath)) {
