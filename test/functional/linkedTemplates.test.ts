@@ -138,7 +138,7 @@ suite("Linked templates functional tests", () => {
                     {
                         parametersFile: tcString(options.mainParametersFile, testCase),
                         waitForDiagnosticsFilter: async (results): Promise<boolean> => {
-                            await waitAllForChildPromises; //asdf?  better way to do this than awaiting here?
+                            await waitAllForChildPromises;
                             if (options.waitForDiagnosticSubstring) {
                                 // tslint:disable-next-line: no-non-null-assertion
                                 return results.diagnostics.some(d => d.message.includes(options.waitForDiagnosticSubstring!));
@@ -430,7 +430,7 @@ suite("Linked templates functional tests", () => {
 
     suite("Parameter validation", () => {
 
-        createLinkedTemplateTest(//asdf
+        createLinkedTemplateTest(
             "tc10",
             "missing and extra parameters (validation)",
             {
@@ -488,7 +488,7 @@ suite("Linked templates functional tests", () => {
             }
         );
 
-        createLinkedTemplateTest(//asdf
+        createLinkedTemplateTest(
             "tc12",
             "Verify correct scope of expressions, variables, parameters",
             {
@@ -521,7 +521,7 @@ suite("Linked templates functional tests", () => {
         );
     });
 
-    createLinkedTemplateTest(//asdf
+    createLinkedTemplateTest(
         "tc13",
         "An array index is out of bounds in the child template due to the parameter value passed in",
         {

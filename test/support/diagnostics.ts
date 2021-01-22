@@ -269,13 +269,10 @@ export interface IGetDiagnosticsOptions {
      */
     waitForChange?: boolean;
 
+    /**
+     * If specified, wait for the filter to return true as well as the normal tests before considering the diagnostics complete
+     */
     waitForDiagnosticsFilter?(results: IDiagnosticsResults): boolean | Promise<boolean>;
-
-    //asdf
-    // // If specified, wait for a diagnostic to match the following substring between continuing with checks
-    // waitForDiagnosticSubstring?: string;
-    // // If specified, wait for the promise to complete before continuing with checks
-    // waitForPromise?: Promise<unknown>;
 }
 
 export async function testDiagnosticsFromFile(filePath: string | Partial<IDeploymentTemplate>, options: ITestDiagnosticsOptions, expected: ExpectedDiagnostics): Promise<void> {

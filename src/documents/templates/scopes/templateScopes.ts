@@ -439,7 +439,6 @@ export class LinkedTemplateScope extends TemplateScope implements IChildDeployme
     public readonly isExternal: boolean = true;
 
     protected getParameterDefinitions(): IParameterDefinition[] | undefined {
-        // tslint:disable-next-line: no-non-null-assertion // constructor guarantees not undefined asdf remove this line
         return this._linkedFileParameterDefinitions;
         //asdf? return this.parentScope.parameterDefinitions;
     }

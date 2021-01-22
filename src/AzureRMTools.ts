@@ -1748,8 +1748,7 @@ export class AzureRMTools {
 
     // asdf move this to the document itself
     private onTemplateGraphAvailable(e: INotifyTemplateGraphArgs & ITelemetryContext): void { //asdf why so many calls?
-        // tslint:disable-next-line: prefer-template no-console
-        //console.log("============================== graph:\n" + JSON.stringify(e, null, 2)); //asdf
+        //console.log("============================== graph:\n" + JSON.stringify(e, null, 2));
         const rootTemplateUri = vscode.Uri.parse(e.rootTemplateUri);
         this._e.set(vscode.Uri.parse/*asdf*/(e.rootTemplateUri, true), e); //asdf
         const dt = this.getOpenedDeploymentTemplate(rootTemplateUri);
