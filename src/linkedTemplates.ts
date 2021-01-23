@@ -140,8 +140,8 @@ async function tryOpenLinkedFile2asdf(
             return {
                 loadError: <Errorish>new LinkedTemplatePathNotFoundError(
                     pathType === PathType.parametersLink ?
-                        `Could not find linked parameter file "${localPath}"` :
-                        `Could not find linked template file "${localPath}"`
+                        `Linked parameter not found: "${localPath}"` :
+                        `Linked template file not found: "${localPath}"`
                 )
             };
         }

@@ -662,11 +662,9 @@ export class DeploymentTemplateDoc extends DeploymentDocument {
 
     /**
      * Retrieves code lenses for the top-level parameters and all child deployments
+     * @param topLevelParameterValuesProvider Represents the associated parameter values for the top level (could be a parameter file), if any
      */
     public getCodeLenses(
-        /**
-         * Represents the associated parameter values for the top level (could be a parameter file), if any
-         */
         topLevelParameterValuesProvider: IParameterValuesSourceProvider | undefined
     ): ResolvableCodeLens[] {
         const lenses: ResolvableCodeLens[] = [];
@@ -694,7 +692,7 @@ export class DeploymentTemplateDoc extends DeploymentDocument {
             lenses.push(...getParentAndChildCodeLenses(scope, infos));
         }
 
-        lenses.push(...this.getChildTemplateCodeLenses());
+        lenses.push(...this.getChildTemplateCodeLenses(topLevelParameterValuesProvider));
 
         return lenses;
     }
@@ -729,7 +727,7 @@ export class DeploymentTemplateDoc extends DeploymentDocument {
             }
 
             // Allow user to change or select/create parameter file
-            lenses.push(new SelectParameterFileCodeLens(this.topLevelScope, parametersCodeLensSpan, parameterFileUri));
+            lenses.push(new SelectParameterFileCodeLens(this.topLevelScope, parametersCodeLensSpan, parameterFileUri, {}));
         }
 
         // Code lens for each parameter definition
@@ -740,7 +738,9 @@ export class DeploymentTemplateDoc extends DeploymentDocument {
         return lenses;
     }
 
-    private getChildTemplateCodeLenses(): ResolvableCodeLens[] {
+    private getChildTemplateCodeLenses(
+        topLevelParameterValuesProvider: IParameterValuesSourceProvider | undefined
+    ): ResolvableCodeLens[] {
         const lenses: ResolvableCodeLens[] = [];
         for (let scope of this.allScopes) {
             const owningDeploymentResource = (<Partial<IChildDeploymentScope>>scope).owningDeploymentResource; //asdf
@@ -749,19 +749,26 @@ export class DeploymentTemplateDoc extends DeploymentDocument {
                     case TemplateScopeKind.NestedDeploymentWithInnerScope:
                     case TemplateScopeKind.NestedDeploymentWithOuterScope:
                         if (scope.rootObject) { //asdf
-                            const lens = NestedTemplateCodeLen.create(scope, scope.rootObject.span);
+                            const lens = NestedTemplateCodeLen.create(scope, scope.rootObject.span); //asdf have code lens figure out its scope
                             if (lens) {
                                 lenses.push(lens);
                             }
                         }
                         break;
                     case TemplateScopeKind.LinkedDeployment:
+                        assert(scope instanceof LinkedTemplateScope, "Expected a LinkedTemplateScope");
+                        //asdfasdf
                         if (owningDeploymentResource) { //asdf
-                            lenses.push(
+                            const templateLinkObject = scope.templateLinkObject;
+                            let span = templateLinkObject ? templateLinkObject.span : owningDeploymentResource.span;
+
+                            lenses.push(...
                                 LinkedTemplateCodeLens.create(
                                     scope,
-                                    owningDeploymentResource?.span, //asdf?
-                                    (<LinkedTemplateScope>scope).linkedFileReferences));
+                                    span, //asdf?  //asdf have code lens figure out its scope
+                                    scope.linkedFileReferences,
+                                    topLevelParameterValuesProvider)
+                            );
                         }
                         break;
                     default:

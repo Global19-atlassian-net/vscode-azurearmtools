@@ -117,6 +117,8 @@ export namespace templateKeys {
 
     // Linked templates
     export const linkedDeploymentTemplateLink = 'templateLink';
+    export const linkedDeploymentTemplateLinkUri = 'uri';
+    export const linkedDeploymentTemplateLinkRelativePath = 'relativePath';
 
     // User functions
     export const userFunctionNamespace = 'namespace';

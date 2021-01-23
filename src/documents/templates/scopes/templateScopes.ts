@@ -350,7 +350,7 @@ export class LinkedTemplateScope extends TemplateScope implements IChildDeployme
     public constructor(
         parentScope: TemplateScope,
         // The value of the "templateLink" property for this linked template
-        templateLinkObject: Json.ObjectValue | undefined,
+        public templateLinkObject: Json.ObjectValue | undefined,
         // parameter values for the linked template
         private parameterValuesProperty: Json.Property | undefined,
         public owningDeploymentResource: IResource,
@@ -370,6 +370,13 @@ export class LinkedTemplateScope extends TemplateScope implements IChildDeployme
             this.document,
             this.parameterValuesProperty,
             templateLinkObject
+        );
+    }
+
+    public get isRelativePath(): boolean {
+        return !!(
+            this.templateLinkObject?.hasProperty(templateKeys.linkedDeploymentTemplateLinkRelativePath)
+            && !this.templateLinkObject?.hasProperty(templateKeys.linkedDeploymentTemplateLinkUri)
         );
     }
 

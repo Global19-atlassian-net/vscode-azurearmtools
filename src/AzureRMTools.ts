@@ -497,48 +497,6 @@ export class AzureRMTools {
                         }
                     }
 
-                    //const startColor1 = "#c0c000";
-                    // const startColor2 = "rgb(50,192,50)";
-                    // const endColor = "#D8D8E080";
-                    const margin = "0 0 0 1em";
-
-                    if (editor && editor.document === textDocument) {
-                        // Link context decorations
-                        {
-                            const options1: vscode.DecorationOptions[] = [];
-
-                            const startPos = deploymentTemplate.getDocumentPosition(0);
-                            const hoverMessage = new vscode.MarkdownString();
-                            hoverMessage.appendMarkdown("### Main template: [main.json](command:azurerm-vscode-tools.openTemplateFile)\n");
-                            hoverMessage.appendMarkdown("... [linkedTemplate1.json] linked from [main.json:873](command:azurerm-vscode-tools.openTemplateFile)  \n");
-                            hoverMessage.appendMarkdown("... [linkedTemplate2.json] linked from [linkedTemplate1.json:471](command:azurerm-vscode-tools.openTemplateFile)  \n");
-                            hoverMessage.appendMarkdown("... This file linked from [linkedTemplate2.json:128](command:azurerm-vscode-tools.openTemplateFile)  \n");
-                            hoverMessage.isTrusted = true;
-
-                            options1.push({//asdf
-                                range: new vscode.Range(startPos.line, Number.MAX_SAFE_INTEGER, startPos.line, Number.MAX_SAFE_INTEGER),
-                                //hoverMessage: new vscode.MarkdownString("This  \nis the  \nfull<br>call\ntree"),
-                                hoverMessage: hoverMessage,
-                                renderOptions: {
-                                    after: {
-                                        color: "#e0e0e0",
-                                        contentText: `Linked from /User/whoever/repo/vscode-azuretools/templates/linked-templates/main.json:873`,
-                                        fontStyle: "italic",
-                                        //margin: "22em  22em 0 0 ",
-                                        //height: "200px",
-                                        //width: "25px",
-                                        //backgroundColor: "blue",
-                                        //borderColor: "red",
-                                        border: "outset",
-                                        borderColor: "#4080C0",
-                                        margin: margin
-
-                                    }
-                                }
-                            });
-                        }
-                    }
-
                     // Not waiting for return
                     // tslint:disable-next-line: no-floating-promises
                     this.reportDeploymentTemplateErrorsInBackground(textDocument, deploymentTemplate).then((errorsWarnings: IErrorsAndWarnings | undefined) => {
@@ -677,7 +635,7 @@ export class AzureRMTools {
             measurements.commentCount = deploymentTemplate.getCommentCount();
             measurements.extErrorsCount = errorsWarnings.errors.length;
             measurements.extWarnCount = errorsWarnings.warnings.length;
-            measurements.linkedParameterFiles = this._mapping.getParameterFile(document.uri) ? 1 : 0;
+            measurements.parameterFiles = this._mapping.getParameterFile(document.uri) ? 1 : 0;
 
             const getChildTemplatesInfo = deploymentTemplate.getChildTemplatesInfo();
             measurements.linkedTemplatesCount = getChildTemplatesInfo.linkedTemplatesCount;
@@ -727,7 +685,7 @@ export class AzureRMTools {
             measurements.maxLineLength = parameters.getMaxLineLength();
             measurements.paramsCount = parameters.parameterValueDefinitions.length;
             measurements.commentCount = parameters.getCommentCount();
-            measurements.linkedTemplateFiles = this._mapping.getTemplateFile(document.uri) ? 1 : 0;
+            measurements.templateFiles = this._mapping.getTemplateFile(document.uri) ? 1 : 0;
             measurements.extErrorsCount = errorsWarnings.errors.length;
             measurements.extWarnCount = errorsWarnings.warnings.length;
         });
@@ -1236,7 +1194,7 @@ export class AzureRMTools {
                 let topLevelParametersProvider: ParameterValuesSourceProviderFromParameterFile | undefined;
                 if (dpUri) {
                     // There is a parameter file, but we don't want to retrieve until we resolve
-                    // the code lens because onProvideCodeLenses is supposed to be fast.
+                    // the code lens because onProvideCodeLenses is supposed to return as quickly as possible.
                     topLevelParametersProvider = new ParameterValuesSourceProviderFromParameterFile(this, dpUri);
                 }
 

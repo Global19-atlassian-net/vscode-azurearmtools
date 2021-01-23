@@ -18,7 +18,7 @@ import { IParameterValuesSource } from '../parameters/IParameterValuesSource';
 import { IParameterValuesSourceProvider } from '../parameters/IParameterValuesSourceProvider';
 import { getRelativeParameterFilePath } from "../parameters/parameterFilePaths";
 import { TemplateScope, TemplateScopeKind } from './scopes/TemplateScope';
-import { TopLevelTemplateScope } from './scopes/templateScopes';
+import { LinkedTemplateScope, TopLevelTemplateScope } from './scopes/templateScopes';
 
 /**
  * A code lens to indicate the current parameter file and to open it
@@ -57,7 +57,10 @@ export class SelectParameterFileCodeLens extends ResolvableCodeLens {
     public constructor(
         scope: TemplateScope,
         span: Span,
-        private parameterFileUri: Uri | undefined
+        private parameterFileUri: Uri | undefined,
+        private _options: {
+            isForLinkedTemplate?: boolean;
+        }
     ) {
         super(scope, span);
     }
@@ -67,7 +70,10 @@ export class SelectParameterFileCodeLens extends ResolvableCodeLens {
         if (this.parameterFileUri) {
             title = `Change...`;
         } else {
-            title = "Select or create a parameter file to enable full validation...";
+            title =
+                this._options.isForLinkedTemplate ?
+                    "Select or create a parameter file to enable validation of relative linked templates..." :
+                    "Select or create a parameter file to enable full validation...";
         }
 
         this.command = {
@@ -219,16 +225,27 @@ export class LinkedTemplateCodeLens extends ResolvableCodeLens {
         };
     }
 
-    public static create(scope: TemplateScope, span: Span, linkedTemplateReferences: ILinkedTemplateReference[] | undefined): LinkedTemplateCodeLens {
+    public static create(
+        scope: LinkedTemplateScope,
+        span: Span, linkedTemplateReferences: ILinkedTemplateReference[] | undefined,
+        topLevelParameterValuesProvider: IParameterValuesSourceProvider | undefined
+    ): LinkedTemplateCodeLens[] {
         let title = "Linked template";
+        const isRelativePath = scope.isRelativePath;
+
+        if (scope.isRelativePath) {
+            title = "Relative linked template";
+        } else {
+            title = "Linked template  ($(warning) Validation with uri not yet supported, consider using relativePath property)";
+        }
 
         if (linkedTemplateReferences && linkedTemplateReferences.length > 0) {
             const ref = linkedTemplateReferences[0];
             title += `: "${ref.originalPath}"`;
 
             let loadState: string;
-            switch (ref.loadState) {
-                case LinkedFileLoadState.LoadFailed: loadState = `${ref.loadErrorMessage ?? 'Load failed'}`; break;
+            switch (ref.loadState) { //asdf
+                case LinkedFileLoadState.LoadFailed: loadState = `$(error) ${ref.loadErrorMessage ?? 'Load failed'}`; break;
                 case LinkedFileLoadState.Loading: loadState = "Loading..."; break;
                 case LinkedFileLoadState.NotLoaded: loadState = "Not loaded"; break;
                 case LinkedFileLoadState.NotSupported: loadState = ""; break;
@@ -245,7 +262,21 @@ export class LinkedTemplateCodeLens extends ResolvableCodeLens {
             title += ` ${JSON.stringify(ref.parameterValues)}`;
         }
 
-        return new LinkedTemplateCodeLens(scope, span, title);
+        const lenses: LinkedTemplateCodeLens[] = [new LinkedTemplateCodeLens(scope, span, title)];
+
+        if (isRelativePath && !topLevelParameterValuesProvider?.parameterFileUri) {
+            lenses.push(
+                new SelectParameterFileCodeLens(
+                    scope,
+                    span,
+                    topLevelParameterValuesProvider?.parameterFileUri,
+                    {
+                        isForLinkedTemplate: true
+                    })
+            );
+        }
+
+        return lenses;
     }
 
     public async resolve(): Promise<boolean> {

@@ -132,8 +132,29 @@
         "description": "Tag Section",
         "context": "resource-body"
     },
-    "Linked Deployment": {
-        "prefix": "arm-linked-template",
+    "Linked Deployment (relative path)": {
+        "prefix": "arm-linked-template-relative",
+        "body": [
+            "{",
+            "\t\"name\": \"${1:linkedDeployment1}\",",
+            "\t\"type\": \"Microsoft.Resources/deployments\",",
+            "\t\"apiVersion\": \"2020-06-01\",",
+            "\t\"properties\": {",
+            "\t\t\"mode\": \"Incremental\",",
+            "\t\t\"templateLink\": {",
+            "\t\t\t\"relativePath\": \"childTemplate.json\",",
+            "\t\t\t\"contentVersion\": \"1.0.0.0\"",
+            "\t\t},",
+            "\t\t\"parameters\": {",
+            "\t\t}",
+            "\t}",
+            "}"
+        ],
+        "description": "Linked Deployment",
+        "context": "resources"
+    },
+    "Linked Deployment (from URI)": {
+        "prefix": "arm-linked-template-uri",
         "body": [
             "{",
             "\t\"name\": \"${1:linkedDeployment1}\",",
