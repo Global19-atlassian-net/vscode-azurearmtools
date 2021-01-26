@@ -534,7 +534,7 @@ suite("Linked templates functional tests", () => {
                 'Warning: Missing required property "uri" (arm-template (schema)) [30,17]',
 
                 // asdf make sure errors points to correct location in child
-                "Error: Template validation failed: The template resource '[variables('arrayVar')[parameters('childIntParam')]]' at line '15' and column '9' is not valid: The language expression property array index '1' is out of bounds.. Please see https://aka.ms/arm-template-expressions for usage details. (arm-template (validation)) [42,9] [The error occurred in a nested template near here] [42,9]",
+                "Error: Template validation failed: The template resource '[variables('arrayVar')[parameters('childIntParam')]]' at line '15' and column '9' is not valid: The language expression property array index '1' is out of bounds.. Please see https://aka.ms/arm-template-expressions for usage details. (arm-template (validation)) [28,27] [The error occurred in a linked template near here] [15,9]",
             ],
             waitForDiagnosticSubstring: "property array index",
             linkedTemplates: [

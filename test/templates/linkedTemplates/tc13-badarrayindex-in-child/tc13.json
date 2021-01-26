@@ -15,7 +15,7 @@
                 },
                 "parameters": {
                     "childIntParam": {
-                        // This is a valid value for the child
+                        // This is a valid value for the child - this should not cause an error
                         "value": 0
                     }
                 }
