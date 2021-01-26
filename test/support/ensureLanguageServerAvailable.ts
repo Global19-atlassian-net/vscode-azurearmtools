@@ -27,7 +27,7 @@ export async function ensureLanguageServerAvailable(): Promise<LanguageClient> {
                 case LanguageServerState.Starting:
                     await delay(100);
                     break;
-                case LanguageServerState.Started:
+                case LanguageServerState.Running:
                     await delay(1000); // Give vscode time to notice the new formatter available (I don't know of a way to detect this)
 
                     isLanguageServerAvailable = true;

@@ -26,7 +26,7 @@ export enum LanguageServerState {
     NotStarted,
     Starting,
     Failed,
-    Started,
+    Running,
     Stopped,
 }
 
@@ -56,7 +56,7 @@ export async function stopArmLanguageServer(): Promise<void> {
 
 export function startArmLanguageServerInBackground(): void {
     switch (ext.languageServerState) {
-        case LanguageServerState.Started:
+        case LanguageServerState.Running:
         case LanguageServerState.Starting:
             // Nothing to do
             return;
@@ -92,7 +92,7 @@ export function startArmLanguageServerInBackground(): void {
 
                     await startLanguageClient(serverDllPath, dotnetExePath);
 
-                    ext.languageServerState = LanguageServerState.Started;
+                    ext.languageServerState = LanguageServerState.Running;
                 } catch (error) {
                     ext.languageServerState = LanguageServerState.Failed;
                     throw error;

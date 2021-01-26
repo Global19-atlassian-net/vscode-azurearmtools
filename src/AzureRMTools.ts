@@ -993,6 +993,7 @@ export class AzureRMTools {
             ext.context.subscriptions.push(vscode.languages.registerRenameProvider(templateOrParameterDocumentSelector, renameProvider));
 
             ext.context.subscriptions.push(notifyTemplateGraphAvailable(this.onTemplateGraphAvailable, this));
+            ext.context.subscriptions.push(ext.languageServerStateChanged(this.onLanguageServerStateChanged, this));
 
             startArmLanguageServerInBackground();
         });
@@ -1721,6 +1722,10 @@ export class AzureRMTools {
             }
             this._codeLensChangedEmitter.fire();
         }
+    }
+
+    private onLanguageServerStateChanged(): void {
+        this._codeLensChangedEmitter.fire();
     }
 
     private setUpTemplate(dt: DeploymentTemplateDoc): void {

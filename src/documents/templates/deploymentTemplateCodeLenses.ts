@@ -6,8 +6,10 @@
 
 import { Range, Uri } from 'vscode';
 import { parseError } from 'vscode-azureextensionui';
+import { ext } from '../../extensionVariables';
 import { ILinkedTemplateReference, LinkedFileLoadState } from "../../ILinkedTemplateReference";
 import { Span } from '../../language/Span';
+import { LanguageServerState } from '../../languageclient/startArmLanguageServer';
 import { assertNever } from '../../util/assertNever';
 import { pathExists } from '../../util/pathExists';
 import { IGotoParameterValueArgs } from '../../vscodeIntegration/commandArguments';
@@ -239,11 +241,33 @@ export class LinkedTemplateCodeLens extends ResolvableCodeLens {
             title = "Linked template  ($(warning) Validation with uri not yet supported, consider using relativePath property)";
         }
 
-        if (linkedTemplateReferences && linkedTemplateReferences.length > 0) {
+        let loadState: string | undefined;
+
+        // If language server not running yet, show language server state instead of file load state
+        //asdf update code lens when running
+        if (ext.languageServerState !== LanguageServerState.Running) {
+            switch (ext.languageServerState) {
+                case LanguageServerState.Failed:
+                    loadState = "Language server failed to start";
+                    break;
+                case LanguageServerState.NotStarted:
+                    loadState = "Language server not started";
+                    break;
+                case LanguageServerState.Starting:
+                    loadState = "Starting up...";
+                    break;
+                case LanguageServerState.Stopped:
+                    loadState = "Language server stopped";
+                    break;
+                default:
+                    assertNever(ext.languageServerState);
+            }
+        }
+
+        if (linkedTemplateReferences && linkedTemplateReferences.length > 0 && !loadState) {
             const ref = linkedTemplateReferences[0];
             title += `: "${ref.originalPath}"`;
 
-            let loadState: string;
             switch (ref.loadState) { //asdf
                 case LinkedFileLoadState.LoadFailed: loadState = `$(error) ${ref.loadErrorMessage ?? 'Load failed'}`; break;
                 case LinkedFileLoadState.Loading: loadState = "Loading..."; break;
@@ -255,11 +279,11 @@ export class LinkedTemplateCodeLens extends ResolvableCodeLens {
                     assertNever(ref.loadState);
             }
 
-            if (loadState) {
-                title += ` (${loadState})`;
-            }
+            title += ` ${JSON.stringify(ref.parameterValues)}`; //asdf
+        }
 
-            title += ` ${JSON.stringify(ref.parameterValues)}`;
+        if (loadState) {
+            title += ` (${loadState})`;
         }
 
         const lenses: LinkedTemplateCodeLens[] = [new LinkedTemplateCodeLens(scope, span, title)];
