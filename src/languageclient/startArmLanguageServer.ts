@@ -16,6 +16,7 @@ import { ext } from '../extensionVariables';
 import { assert } from '../fixed_assert';
 import { INotifyTemplateGraphArgs, IRequestOpenLinkedFileArgs, onRequestOpenLinkedFile } from '../linkedTemplates';
 import { assertNever } from '../util/assertNever';
+import { delayWhileSync } from '../util/delayWhileSync';
 import { WrappedErrorHandler } from './WrappedErrorHandler';
 
 const languageServerDllName = 'Microsoft.ArmLanguageServer.dll';
@@ -24,6 +25,7 @@ const _notifyTemplateGraphAvailableEmitter: EventEmitter<INotifyTemplateGraphArg
 
 let haveFirstSchemasStartedLoading: boolean = false;
 let haveFirstSchemasFinishedLoading: boolean = false;
+let isShowingLoadingSchemasProgress: boolean = false;
 
 export enum LanguageServerState {
     NotStarted,
@@ -77,7 +79,7 @@ export function startArmLanguageServerInBackground(): void {
 
     window.withProgress(
         {
-            location: ProgressLocation.Window,
+            location: ProgressLocation.Notification,
             title: `Starting ${languageServerName}`
         },
         async () => {
@@ -359,4 +361,23 @@ function onSchemaValidationNotication(args: notifications.ISchemaValidationNotif
                 ? LanguageServerState.Running
                 : ext.languageServerState;
     ext.languageServerState = newState;
+
+    if (newState === LanguageServerState.LoadingSchemas) {
+        showLoadingSchemasProgress();
+    }
+}
+
+function showLoadingSchemasProgress(): void {
+    if (!isShowingLoadingSchemasProgress) {
+        isShowingLoadingSchemasProgress = true;
+        window.withProgress(
+            {
+                location: ProgressLocation.Notification,
+                title: `Loading ARM schemas`
+            },
+            async () => delayWhileSync(500, () => ext.languageServerState === LanguageServerState.LoadingSchemas)
+        ).then(() => {
+            isShowingLoadingSchemasProgress = false;
+        });
+    }
 }
