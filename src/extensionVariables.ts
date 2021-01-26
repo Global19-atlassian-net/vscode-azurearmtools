@@ -64,8 +64,10 @@ class ExtensionVariables {
 
     public languageServerClient: LanguageClient | undefined;
     public set languageServerState(value: LanguageServerState) {
-        this._languageServerState = value;
-        this._languageServerStateEmitter.fire();
+        if (this._languageServerState !== value) {
+            this._languageServerState = value;
+            this._languageServerStateEmitter.fire();
+        }
     }
     public get languageServerState(): LanguageServerState {
         return this._languageServerState;

@@ -22,12 +22,16 @@ const languageServerDllName = 'Microsoft.ArmLanguageServer.dll';
 const defaultTraceLevel = 'Warning';
 const _notifyTemplateGraphAvailableEmitter: EventEmitter<INotifyTemplateGraphArgs & ITelemetryContext> = new EventEmitter<INotifyTemplateGraphArgs & ITelemetryContext>();
 
+let haveFirstSchemasStartedLoading: boolean = false;
+let haveFirstSchemasFinishedLoading: boolean = false;
+
 export enum LanguageServerState {
     NotStarted,
     Starting,
     Failed,
     Running,
     Stopped,
+    LoadingSchemas,
 }
 
 /**
@@ -58,6 +62,7 @@ export function startArmLanguageServerInBackground(): void {
     switch (ext.languageServerState) {
         case LanguageServerState.Running:
         case LanguageServerState.Starting:
+        case LanguageServerState.LoadingSchemas:
             // Nothing to do
             return;
 
@@ -223,6 +228,10 @@ export async function startLanguageClient(serverDllPath: string, dotnetExePath: 
             client.onNotification(notifications.notifyTemplateGraph, async (args: INotifyTemplateGraphArgs) => {
                 onNotifyTemplateGraph(args);
             });
+
+            client.onNotification(notifications.schemaValidationNotification, async (args: notifications.ISchemaValidationNotificationArgs) => {
+                onSchemaValidationNotication(args);
+            });
         } catch (error) {
             throw new Error(
                 `${languageServerName}: An error occurred starting the language server.${os.EOL}${os.EOL}${parseError(error).message}`
@@ -329,4 +338,25 @@ function onNotifyTemplateGraph(args: INotifyTemplateGraphArgs): void {
     callWithTelemetryAndErrorHandlingSync('notifyTemplateGraph', async (context: IActionContext) => { //asdf error handling
         _notifyTemplateGraphAvailableEmitter.fire(<INotifyTemplateGraphArgs & ITelemetryContext>Object.assign({}, context.telemetry, args));
     });
+}
+
+function onSchemaValidationNotication(args: notifications.ISchemaValidationNotificationArgs): void {
+    console.warn(`SchemaValidationNotification: `); //asdf
+    console.warn(args); //asdf
+
+    if (!haveFirstSchemasStartedLoading) {
+        haveFirstSchemasStartedLoading = true;
+    }
+    if (args.completed && !haveFirstSchemasFinishedLoading) {
+        haveFirstSchemasFinishedLoading = true;
+    }
+
+    const isLoadingSchemas = haveFirstSchemasStartedLoading && !haveFirstSchemasFinishedLoading;
+    const newState =
+        (isLoadingSchemas && ext.languageServerState === LanguageServerState.Running)
+            ? LanguageServerState.LoadingSchemas
+            : (!isLoadingSchemas && ext.languageServerState === LanguageServerState.LoadingSchemas)
+                ? LanguageServerState.Running
+                : ext.languageServerState;
+    ext.languageServerState = newState;
 }

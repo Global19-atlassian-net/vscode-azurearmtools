@@ -55,6 +55,12 @@ export namespace configKeys {
 export namespace notifications {
     export const requestOpenLinkedTemplate = 'arm-template/requestOpenLinkedTemplate';
     export const notifyTemplateGraph = 'arm-template/notifyTemplateGraph';
+    export const schemaValidationNotification = 'arm-template/schemaValidation';
+
+    export interface ISchemaValidationNotificationArgs {
+        uri: string;
+        completed: boolean;
+    }
 
     export namespace Diagnostics {
         export const codeAnalysisStarting = 'arm-template/diag-codeAnalysisStarting';

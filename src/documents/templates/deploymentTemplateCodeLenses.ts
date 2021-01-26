@@ -259,6 +259,9 @@ export class LinkedTemplateCodeLens extends ResolvableCodeLens {
                 case LanguageServerState.Stopped:
                     loadState = "Language server stopped";
                     break;
+                case LanguageServerState.LoadingSchemas:
+                    loadState = "Loading schemas...";
+                    break;
                 default:
                     assertNever(ext.languageServerState);
             }
