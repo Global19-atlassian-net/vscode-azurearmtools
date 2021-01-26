@@ -186,9 +186,6 @@ suite("Linked templates functional tests", () => {
             mainTemplateFile: "templates/linkedTemplates/<TC>/<TC>.json",
             mainParametersFile: "<TC>.parameters.json",
             mainTemplateExpected: [
-                // tslint:disable-next-line: no-suspicious-comment
-                // TODO: need schema update to fix this
-                'Warning: Missing required property "uri" (arm-template (schema)) [16,17]'
             ],
             linkedTemplates: [
                 {
@@ -208,13 +205,9 @@ suite("Linked templates functional tests", () => {
         {
             mainTemplateFile: "templates/linkedTemplates/<TC>/<TC>.json",
             mainParametersFile: "<TC>.parameters.json",
-            waitForDiagnosticSubstring: 'Could not find linked template file',
+            waitForDiagnosticSubstring: 'not found',
             mainTemplateExpected: [
-                // tslint:disable-next-line: no-suspicious-comment
-                // TODO: need schema update to fix this
-                'Warning: Missing required property "uri" (arm-template (schema)) [14,17]',
-
-                `Error: Template validation failed: Could not find linked template file `
+                `Error: Template validation failed: Linked template file not found: `
                 + `"${resolveInTestFolder('templates/linkedTemplates/<TC>/subfolder/child.json')}"`
                 + ` (arm-template (validation)) [12,27]`
             ],
@@ -230,9 +223,6 @@ suite("Linked templates functional tests", () => {
             mainTemplateFile: "templates/linkedTemplates/<TC>/<TC>.json",
             mainParametersFile: "<TC>.parameters.json",
             mainTemplateExpected: [
-                // tslint:disable-next-line: no-suspicious-comment
-                // TODO: need schema update to fix this
-                'Warning: Missing required property "uri" (arm-template (schema)) [16,17]'
             ],
             linkedTemplates: [
                 {
@@ -253,10 +243,6 @@ suite("Linked templates functional tests", () => {
             mainTemplateFile: "templates/linkedTemplates/<TC>/<TC> with spaces.json",
             mainParametersFile: "<TC> with spaces.parameters.json",
             mainTemplateExpected: [
-                // tslint:disable-next-line: no-suspicious-comment
-                // TODO: need schema update to fix this
-                "Warning: Missing required property \"uri\" (arm-template (schema)) [16,17-16,31]",
-
                 "Error: The following parameters do not have values: \"p2string\" (arm-template (expressions)) [16,33-16,33]"
             ],
             //asdf why is this necessary?
@@ -287,9 +273,6 @@ suite("Linked templates functional tests", () => {
             mainTemplateFile: "templates/linkedTemplates/<TC>\\<TC>.json",
             mainParametersFile: "<TC>.parameters.json",
             mainTemplateExpected: [
-                // tslint:disable-next-line: no-suspicious-comment
-                // TODO: need schema update to fix this
-                'Warning: Missing required property "uri" (arm-template (schema))'
             ],
             linkedTemplates: [
                 {
@@ -315,11 +298,7 @@ suite("Linked templates functional tests", () => {
             //   to wait
             waitForDiagnosticSubstring: "Template parameter JToken type is not valid",
             mainTemplateExpected: [
-                // tslint:disable-next-line: no-suspicious-comment
-                // TODO: need schema update to fix this
-                'Warning: Missing required property "uri" (arm-template (schema)) [17,17]',
-
-                "Error: Template validation failed: Template parameter JToken type is not valid. Expected 'Integer'. Actual 'String'. Please see https://aka.ms/arm-deploy/#parameter-file for usage details. (arm-template (validation)) [26,21] [The error occurred in a nested template near here] [26,21]"
+                "Error: Template validation failed: Template parameter JToken type is not valid. Expected 'Integer'. Actual 'String'. Please see https://aka.ms/arm-deploy/#parameter-file for usage details. (arm-template (validation)) [15,27] [The error occurred in a linked template near here] [12,21]"
             ],
             linkedTemplates: [
                 {
@@ -341,19 +320,12 @@ suite("Linked templates functional tests", () => {
             mainTemplateFile: "templates/linkedTemplates/<TC>/<TC>.json",
             mainParametersFile: "<TC>.parameters.json",
             mainTemplateExpected: [
-                // tslint:disable-next-line: no-suspicious-comment
-                // TODO: need schema update to fix this
-                'Warning: Missing required property "uri" (arm-template (schema)) [17,17]',
             ],
             linkedTemplates: [
                 {
                     parentTemplateFile: "templates/linkedTemplates/<TC>/<TC>.json",
                     linkedTemplateFile: "templates/linkedTemplates/<TC>/subfolder/child1.json",
                     expected: [
-                        // tslint:disable-next-line: no-suspicious-comment
-                        // TODO: need schema update to fix this
-                        'Warning: Missing required property "uri" (arm-template (schema)) [16,17]',
-
                         "Warning: The variable 'unusedVar' is never used. (arm-template (expressions)) [5,9]",
                     ]
                 }
@@ -370,21 +342,14 @@ suite("Linked templates functional tests", () => {
             mainTemplateFile: "templates/linkedTemplates/<TC>/<TC>.json",
             mainParametersFile: "<TC>.parameters.json",
             mainTemplateExpected: [
-                // tslint:disable-next-line: no-suspicious-comment
-                // TODO: need schema update to fix this
-                'Warning: Missing required property "uri" (arm-template (schema)) [17,17]',
             ],
             linkedTemplates: [
                 {
                     parentTemplateFile: "templates/linkedTemplates/<TC>/<TC>.json",
                     linkedTemplateFile: "templates/linkedTemplates/<TC>/subfolder/child1.json",
                     expected: [
-                        // tslint:disable-next-line: no-suspicious-comment
-                        // TODO: need schema update to fix this
-                        'Warning: Missing required property "uri" (arm-template (schema)) [16,17]',
-
                         "Warning: The variable 'unusedVar' is never used. (arm-template (expressions)) [5,9]",
-                        "Error: Template validation failed: Template parameter JToken type is not valid. Expected 'Integer'. Actual 'String'. Please see https://aka.ms/arm-deploy/#parameter-file for usage details. (arm-template (validation)) [25,21] [The error occurred in a nested template near here] [25,21]",
+                        "Error: Template validation failed: Template parameter JToken type is not valid. Expected 'Integer'. Actual 'String'. Please see https://aka.ms/arm-deploy/#parameter-file for usage details. (arm-template (validation)) [25,21] [The error occurred in a linked template near here] [25,21]",
                     ]
                 },
                 {
@@ -407,12 +372,7 @@ suite("Linked templates functional tests", () => {
             mainTemplateFile: "templates/linkedTemplates/<TC>/<TC>.json",
             mainParametersFile: "<TC>.parameters.json",
             mainTemplateExpected: [
-                // tslint:disable-next-line: no-suspicious-comment
-                // TODO: need schema update to fix this
-                'Warning: Missing required property "uri" (arm-template (schema)) [17,17]',
-                'Warning: Missing required property "uri" (arm-template (schema)) [33,17]',
-
-                "Error: Template validation failed: Template parameter JToken type is not valid. Expected 'Integer'. Actual 'String'. Please see https://aka.ms/arm-deploy/#parameter-file for usage details. (arm-template (validation)) [35,21] [The error occurred in a nested template near here] [35,21]",
+                "Error: Template validation failed: Template parameter JToken type is not valid. Expected 'Integer'. Actual 'String'. Please see https://aka.ms/arm-deploy/#parameter-file for usage details. (arm-template (validation)) [31,27] [The error occurred in a linked template near here] [5,21]",
             ],
             waitForDiagnosticSubstring: "Template validation failed",
             linkedTemplates: [
@@ -420,7 +380,6 @@ suite("Linked templates functional tests", () => {
                     parentTemplateFile: "templates/linkedTemplates/<TC>/<TC>.json",
                     linkedTemplateFile: "templates/linkedTemplates/<TC>/subfolder/child.json",
                     expected: [
-                        'Warning: Missing required property "uri" (arm-template (schema)) [16,17-16,31]',
                         "Warning: The parameter 'intParam' is never used. (arm-template (expressions)) [5,9-5,19]",
                     ]
                 }
@@ -437,14 +396,10 @@ suite("Linked templates functional tests", () => {
                 mainTemplateFile: "templates/linkedTemplates/<TC>/<TC>.json",
                 mainParametersFile: "<TC>.parameters.json",
                 mainTemplateExpected: [
-                    // tslint:disable-next-line: no-suspicious-comment
-                    // TODO: need schema update to fix this
-                    'Warning: Missing required property "uri" (arm-template (schema))',
+                    "Error: Template validation failed: The template parameters 'extraParam' in the parameters file are not valid; they are not present in the original template and can therefore not be provided at deployment time. The only supported parameters for this template are 'intParam, stringParam'. Please see https://aka.ms/arm-deploy/#parameter-file for usage details. (arm-template (validation)) [19,27] [The error occurred in a linked template near here] [1,1]",
+                    'Error: The following parameters do not have values: "stringParam" (arm-template (expressions)) [24,17]',
 
-                    "Error: Template validation failed: The template parameters 'extraParam' in the parameters file are not valid; they are not present in the original template and can therefore not be provided at deployment time. The only supported parameters for this template are 'intParam, stringParam'. Please see https://aka.ms/arm-deploy/#parameter-file for usage details. (arm-template (validation)) [The error occurred in a nested template near here]",
-                    'Error: The following parameters do not have values: "stringParam" (arm-template (expressions))',
-
-                    "Warning: The variable 'v3' is never used. (arm-template (expressions))",
+                    "Warning: The variable 'v3' is never used. (arm-template (expressions)) [12,9]",
                 ],
                 waitForDiagnosticSubstring: 'Template validation failed',
                 linkedTemplates: [
@@ -452,7 +407,6 @@ suite("Linked templates functional tests", () => {
                         parentTemplateFile: "templates/linkedTemplates/<TC>/<TC>.json",
                         linkedTemplateFile: "templates/linkedTemplates/<TC>/subfolder/child.json",
                         expected: [
-                            'Warning: Missing required property "uri" (arm-template (schema)) [19,17-19,31]',
                             "Warning: The parameter 'intParam' is never used. (arm-template (expressions)) [5,9-5,19]",
                             "Warning: The parameter 'stringParam' is never used. (arm-template (expressions)) [8,9-8,22]",
                         ]
@@ -469,7 +423,6 @@ suite("Linked templates functional tests", () => {
                 mainParametersFile: "<TC>.parameters.json",
                 mainTemplateExpected: [
                     'Error: The following parameters do not have values: "intParam", "stringParam" (arm-template (expressions)) [21,33-21,33]',
-                    'Warning: Missing required property "uri" (arm-template (schema)) [21,17-21,31]',
                     "Warning: The variable 'v1' is never used. (arm-template (expressions)) [10,9-10,13]",
                     "Warning: The variable 'v2' is never used. (arm-template (expressions)) [11,9-11,13]"
                 ],
@@ -479,7 +432,6 @@ suite("Linked templates functional tests", () => {
                         parentTemplateFile: "templates/linkedTemplates/<TC>/<TC>.json",
                         linkedTemplateFile: "templates/linkedTemplates/<TC>/subfolder/child.json",
                         expected: [
-                            'Warning: Missing required property "uri" (arm-template (schema)) [19,17-19,31]',
                             "Warning: The parameter 'intParam' is never used. (arm-template (expressions)) [5,9-5,19]",
                             "Warning: The parameter 'stringParam' is never used. (arm-template (expressions)) [8,9-8,22]",
                         ]
@@ -495,10 +447,6 @@ suite("Linked templates functional tests", () => {
                 mainTemplateFile: "templates/linkedTemplates/<TC>/<TC>.json",
                 mainParametersFile: "<TC>.parameters.json",
                 mainTemplateExpected: [
-                    // tslint:disable-next-line: no-suspicious-comment
-                    // TODO: need schema update to fix this
-                    'Warning: Missing required property "uri" (arm-template (schema)) [56,17]'
-
                     // Expect no errors in the main template
                 ],
                 linkedTemplates: [
@@ -506,10 +454,6 @@ suite("Linked templates functional tests", () => {
                         parentTemplateFile: "templates/linkedTemplates/<TC>/<TC>.json",
                         linkedTemplateFile: "templates/linkedTemplates/<TC>/subfolder/child.json",
                         expected: [
-                            // tslint:disable-next-line: no-suspicious-comment
-                            // TODO: need schema update to fix this
-                            'Warning: Missing required property "uri" (arm-template (schema)) [28,17-28,31]',
-
                             "Warning: The parameter 'childIntParam' is never used. (arm-template (expressions)) [5,9-5,24]",
                             "Warning: The parameter 'childStringParam' is never used. (arm-template (expressions)) [8,9-8,27]",
                             "Warning: The parameter 'location' is never used. (arm-template (expressions)) [11,9-11,19]",
@@ -528,12 +472,6 @@ suite("Linked templates functional tests", () => {
             mainTemplateFile: "templates/linkedTemplates/tc13-badarrayindex-in-child/<TC>.json",
             mainParametersFile: "<TC>.parameters.json",
             mainTemplateExpected: [
-                // tslint:disable-next-line: no-suspicious-comment
-                // TODO: need schema update to fix this
-                'Warning: Missing required property "uri" (arm-template (schema)) [13,17]',
-                'Warning: Missing required property "uri" (arm-template (schema)) [30,17]',
-
-                // asdf make sure errors points to correct location in child
                 "Error: Template validation failed: The template resource '[variables('arrayVar')[parameters('childIntParam')]]' at line '15' and column '9' is not valid: The language expression property array index '1' is out of bounds.. Please see https://aka.ms/arm-template-expressions for usage details. (arm-template (validation)) [28,27] [The error occurred in a linked template near here] [15,9]",
             ],
             waitForDiagnosticSubstring: "property array index",

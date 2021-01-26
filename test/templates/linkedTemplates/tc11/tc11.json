@@ -14,15 +14,15 @@
         {
             "name": "linkedDeployment1",
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2019-10-01",
+            "apiVersion": "2020-06-01",
             "properties": {
                 "mode": "Incremental",
-                    // ERROR: Missing values for stringParam and intParam (there's no 'parameters' object)
+                // ERROR: Missing values for stringParam and intParam (there's no 'parameters' object)
                 "templateLink": {
                     "relativePath": "subfolder/child.json"
-                } 
+                }
             }
-        }    
+        }
     ],
     "outputs": {}
 }
