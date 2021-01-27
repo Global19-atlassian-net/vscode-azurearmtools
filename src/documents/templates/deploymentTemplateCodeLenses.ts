@@ -248,19 +248,19 @@ export class LinkedTemplateCodeLens extends ResolvableCodeLens {
         if (ext.languageServerState !== LanguageServerState.Running) {
             switch (ext.languageServerState) {
                 case LanguageServerState.Failed:
-                    loadState = "Language server failed to start";
+                    loadState = "language server failed to start";
                     break;
                 case LanguageServerState.NotStarted:
-                    loadState = "Language server not started";
+                    loadState = "language server not started";
                     break;
                 case LanguageServerState.Starting:
-                    loadState = "Starting up...";
+                    loadState = "starting up...";
                     break;
                 case LanguageServerState.Stopped:
-                    loadState = "Language server stopped";
+                    loadState = "language server stopped";
                     break;
                 case LanguageServerState.LoadingSchemas:
-                    loadState = "Loading schemas...";
+                    loadState = "loading schemas...";
                     break;
                 default:
                     assertNever(ext.languageServerState);
@@ -271,18 +271,16 @@ export class LinkedTemplateCodeLens extends ResolvableCodeLens {
             const ref = linkedTemplateReferences[0];
             title += `: "${ref.originalPath}"`;
 
-            switch (ref.loadState) { //asdf
+            switch (ref.loadState) {
                 case LinkedFileLoadState.LoadFailed: loadState = `$(error) ${ref.loadErrorMessage ?? 'Load failed'}`; break;
-                case LinkedFileLoadState.Loading: loadState = "Loading..."; break;
-                case LinkedFileLoadState.NotLoaded: loadState = "Not loaded"; break;
+                case LinkedFileLoadState.Loading: loadState = "loading..."; break;
+                case LinkedFileLoadState.NotLoaded: loadState = "not loaded"; break;
                 case LinkedFileLoadState.NotSupported: loadState = ""; break;
-                case LinkedFileLoadState.SuccessfullyLoaded: loadState = "Loaded"; break;
+                case LinkedFileLoadState.SuccessfullyLoaded: loadState = ""; break;
                 case LinkedFileLoadState.TooDeep: loadState = ""; break;
                 default:
                     assertNever(ref.loadState);
             }
-
-            title += ` ${JSON.stringify(ref.parameterValues)}`; //asdf
         }
 
         if (loadState) {

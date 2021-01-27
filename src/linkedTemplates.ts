@@ -6,8 +6,10 @@
 import * as path from 'path';
 import { TextDocument, Uri, workspace } from "vscode";
 import { callWithTelemetryAndErrorHandling, IActionContext, parseError, TelemetryProperties } from "vscode-azureextensionui";
+import { armTemplateLanguageId } from './constants';
 import { DeploymentTemplateDoc } from './documents/templates/DeploymentTemplateDoc';
 import { LinkedTemplateScope } from './documents/templates/scopes/templateScopes';
+import { setLangIdToArm } from './documents/templates/supported';
 import { Errorish } from './Errorish';
 import { ext } from "./extensionVariables";
 import { assert } from './fixed_assert';
@@ -107,7 +109,7 @@ export async function tryOpenLinkedFile(
         // Strip the path of any query string, and use only the local file path
         const localPath = requestedLinkResolvedPathParsed.fsPath;
 
-        const result = await tryOpenLinkedFile2asdf(localPath, pathType);
+        const result = await tryOpenLinkedFile2asdf(localPath, pathType, context);
         if (result.document) {
             properties.openResult = 'Loaded';
         } else {
@@ -132,7 +134,8 @@ class LinkedTemplatePathNotFoundError extends Error { //asdf how does this look 
  */
 async function tryOpenLinkedFile2asdf(
     localPath: string,
-    pathType: PathType
+    pathType: PathType,
+    context: IActionContext
 ): Promise<OpenLinkedFileResult> {
     try {
         // Check first if the path exists, so we get a better error message if not
@@ -149,7 +152,13 @@ async function tryOpenLinkedFile2asdf(
         // Load into a text document (this does not cause the document to be shown)
         // Note: If the URI is already opened, this returns the existing document
         const document = await workspace.openTextDocument(localPath);
-        ext.outputChannel.appendLine(`... Opened linked file ${localPath}`);
+        ext.outputChannel.appendLine(`... Opened linked file ${localPath}, langid = ${document.languageId}`);
+        if (document.languageId !== armTemplateLanguageId) {
+            ext.outputChannel.appendLine(`... Setting langid to ${armTemplateLanguageId}`);
+            context.telemetry.properties.isLinkedTemplate = 'true';
+            setLangIdToArm(document, context);
+            //asdf how wait?
+        }
 
         // No errors
         return { document };

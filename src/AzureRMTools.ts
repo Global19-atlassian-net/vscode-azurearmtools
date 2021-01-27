@@ -24,8 +24,9 @@ import { ExtractItem } from './documents/templates/ExtractItem';
 import { gotoResources } from './documents/templates/gotoResources';
 import { getItemTypeQuickPicks, InsertItem } from "./documents/templates/insertItem";
 import { allSchemas, getPreferredSchema } from './documents/templates/schemas';
+import { LinkedTemplateScope } from './documents/templates/scopes/templateScopes';
 import { getQuickPickItems, sortTemplate } from "./documents/templates/sortTemplate";
-import { mightBeDeploymentParameters, mightBeDeploymentTemplate, templateDocumentSelector, templateOrParameterDocumentSelector } from "./documents/templates/supported";
+import { mightBeDeploymentParameters, mightBeDeploymentTemplate, setLangIdToArm, templateDocumentSelector, templateOrParameterDocumentSelector } from "./documents/templates/supported";
 import { TemplateSectionType } from "./documents/templates/TemplateSectionType";
 import { ext } from "./extensionVariables";
 import { assert } from './fixed_assert';
@@ -492,7 +493,7 @@ export class AzureRMTools {
                         // Make sure the language ID is set to arm-template
                         if (textDocument.languageId !== armTemplateLanguageId) {
                             // The document will be reloaded, firing this event again with the new langid
-                            AzureRMTools.setLanguageToArm(textDocument, actionContext);
+                            setLangIdToArm(textDocument, actionContext);
                             return;
                         }
                     }
@@ -567,15 +568,6 @@ export class AzureRMTools {
             // tslint:disable-next-line: no-floating-promises
             this.updateEditorState();
         });
-    }
-
-    private static setLanguageToArm(document: vscode.TextDocument, actionContext: IActionContext): void {
-        vscode.languages.setTextDocumentLanguage(document, armTemplateLanguageId);
-
-        actionContext.telemetry.properties.switchedToArm = 'true';
-        actionContext.telemetry.properties.docLangId = document.languageId;
-        actionContext.telemetry.properties.docExtension = path.extname(document.fileName);
-        actionContext.telemetry.suppressIfSuccessful = false;
     }
 
     private reportTemplateOpenedTelemetry(
@@ -895,7 +887,7 @@ export class AzureRMTools {
             };
             ext.context.subscriptions.push(vscode.languages.registerHoverProvider(templateDocumentSelector, hoverProvider));
 
-            const codeLensProvider = {
+            const codeLensProvider: vscode.CodeLensProvider = {
                 onDidChangeCodeLenses: this._codeLensChangedEmitter.event,
                 provideCodeLenses: (document: vscode.TextDocument, token: vscode.CancellationToken): vscode.CodeLens[] | undefined => {
                     return this.onProvideCodeLenses(document, token);
@@ -991,6 +983,17 @@ export class AzureRMTools {
                 }
             };
             ext.context.subscriptions.push(vscode.languages.registerRenameProvider(templateOrParameterDocumentSelector, renameProvider));
+
+            const documentLinkProvider: vscode.DocumentLinkProvider = {
+                provideDocumentLinks: async (document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.DocumentLink[] | undefined> => {
+                    return await this.provideDocumentLinks(document, token);
+                },
+                resolveDocumentLink: async (link: vscode.DocumentLink, token: vscode.CancellationToken): Promise<vscode.DocumentLink | undefined> => {
+                    return await this.resolveDocumentLink(link, token);
+                }
+            };
+            ext.context.subscriptions.push(
+                vscode.languages.registerDocumentLinkProvider(templateDocumentSelector, documentLinkProvider));
 
             ext.context.subscriptions.push(notifyTemplateGraphAvailable(this.onTemplateGraphAvailable, this));
             ext.context.subscriptions.push(ext.languageServerStateChanged(this.onLanguageServerStateChanged, this));
@@ -1635,6 +1638,41 @@ export class AzureRMTools {
 
                 return result;
             }
+        });
+    }
+
+    private async provideDocumentLinks(textDocument: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.DocumentLink[] | undefined> {//asdf
+        return await callWithTelemetryAndErrorHandling('provideDocumentLinks', async (actionContext) => {
+            actionContext.errorHandling.rethrow = true;
+
+            const dt = this.getOpenedDeploymentTemplate(textDocument);
+            //const cancel = new Cancellation(token, actionContext);
+            //asdf            const pc: PositionContext | undefined = await this.getPositionContext(textDocument, position, cancel);
+            // if (!token.isCancellationRequested && pc) {
+            // }
+
+            if (dt) {
+                return dt.getDocumentLinks(undefined/*asdf*/, actionContext);
+            }
+
+            return undefined;
+        });
+    }
+
+    private async resolveDocumentLink(link: vscode.DocumentLink, token: vscode.CancellationToken): Promise<vscode.DocumentLink | undefined> {
+        return await callWithTelemetryAndErrorHandling('provideDocumentLinks', async (actionContext) => {
+            actionContext.telemetry.suppressIfSuccessful = true; //asdf?
+
+            // tslint:disable-next-line: no-any
+            const extra = <{ scope?: LinkedTemplateScope; fallbackTarget?: vscode.Uri }><any>link;
+            if (extra.scope && extra.scope.linkedFileReferences && extra.scope.linkedFileReferences.length > 0) {
+                //throw new Error("Oh, well");
+                link.target = vscode.Uri.parse(extra.scope.linkedFileReferences[0].fullUri);
+            } else {
+                link.target = extra.fallbackTarget;
+            }
+
+            return link;
         });
     }
 

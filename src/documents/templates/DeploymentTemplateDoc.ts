@@ -5,7 +5,9 @@
 // tslint:disable: max-classes-per-file // Private classes are related to DeploymentTemplate implementation
 
 import * as assert from 'assert';
-import { CodeAction, CodeActionContext, CodeActionKind, Command, Range, Selection, Uri } from "vscode";
+import * as path from 'path';
+import { CodeAction, CodeActionContext, CodeActionKind, Command, DocumentLink, Range, Selection, Uri } from "vscode";
+import { IActionContext } from 'vscode-azureextensionui';
 import { TemplateScopeKind } from '../../../extension.bundle';
 import { configKeys, templateKeys } from "../../constants";
 import { ext } from '../../extensionVariables';
@@ -22,11 +24,13 @@ import { CachedValue } from '../../util/CachedValue';
 import { expectParameterDocumentOrUndefined } from '../../util/expectDocument';
 import { Histogram } from '../../util/Histogram';
 import { nonNullValue } from '../../util/nonNull';
+import { ofType } from '../../util/ofType';
 import { FindReferencesAndErrorsVisitor } from "../../visitors/FindReferencesVisitor";
 import { FunctionCountVisitor } from "../../visitors/FunctionCountVisitor";
 import { GenericStringVisitor } from "../../visitors/GenericStringVisitor";
 import { ReferenceInVariableDefinitionsVisitor } from '../../visitors/ReferenceInVariableDefinitionsVisitor';
 import * as UndefinedVariablePropertyVisitor from "../../visitors/UndefinedVariablePropertyVisitor";
+import { getVSCodeRangeFromSpan } from '../../vscodeIntegration/vscodePosition';
 import { DeploymentDocument, ResolvableCodeLens } from "../DeploymentDocument";
 import { IParameterValuesSourceProvider } from '../parameters/IParameterValuesSourceProvider';
 import { getMissingParameterErrors, getParameterValuesCodeActions } from '../parameters/ParameterValues';
@@ -778,6 +782,38 @@ export class DeploymentTemplateDoc extends DeploymentDocument {
         }
 
         return lenses;
+    }
+
+    //asdf
+    public getDocumentLinks(associatedDocument: DeploymentDocument | undefined, context: IActionContext): DocumentLink[] {
+        const links: DocumentLink[] = [];
+
+        for (const scope of ofType(this.allScopes, LinkedTemplateScope)) {
+            //asdf if (scope.linkedFileReferences && scope.linkedFileReferences.length > 0) {
+            const relativePathValue: Json.StringValue | undefined =
+                scope.templateLinkObject?.getPropertyValue(templateKeys.linkedDeploymentTemplateLinkRelativePath)?.asStringValue;
+            if (relativePathValue && relativePathValue.unquotedValue) {
+
+                const link = new DocumentLink(
+                    getVSCodeRangeFromSpan(this, relativePathValue.unquotedSpan));
+                //asdf Uri.parse(scope.linkedFileReferences[0/*asdf*/].fullUri));
+                //link.tooltip = scope.linkedFileReferences[0/*asdf*/].fullUri;
+                // tslint:disable-next-line: no-any
+                (<{ scope?: LinkedTemplateScope }><any>link).scope = scope; //asdf
+                // tslint:disable-next-line: no-any
+                (<{ fallbackTarget?: Uri }><any>link).fallbackTarget = Uri.file(
+                    path.resolve(path.dirname(this.documentUri.fsPath), relativePathValue.unquotedValue)
+                );
+                //asdf if (scope.linkedFileReferences && scope.linkedFileReferences.length > 0) {
+                //link.target = Uri.file(scope.linkedFileReferences[0/*asdf*/].originalPath);
+                //link.target = Uri.file(relativePathValue.unquotedValue); //asdf resolve from template file folder
+                //}
+                links.push(link);
+            }
+            //}
+        }
+
+        return links;
     }
 
     /**
