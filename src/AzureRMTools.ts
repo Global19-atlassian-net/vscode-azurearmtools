@@ -1776,16 +1776,16 @@ export class AzureRMTools {
             // console.log(`Template graph available for ${rootTemplateUri}`); //asdf
             // const dt = this.getOpenedDeploymentTemplate(rootTemplateUri);
             // if (dt) {
-            const map: NormalizedMap<vscode.Uri, DeploymentTemplateDoc> = new NormalizedMap<vscode.Uri, DeploymentTemplateDoc>(
+            const loadedTemplatesMap: NormalizedMap<vscode.Uri, DeploymentTemplateDoc> = new NormalizedMap<vscode.Uri, DeploymentTemplateDoc>(
                 this.getNormalizedDocumentKey
             ); //asdf
             for (const entry of this._deploymentDocuments) {
                 if (entry[1] instanceof DeploymentTemplateDoc) {
-                    map.set(entry[1].documentUri, entry[1]);
+                    loadedTemplatesMap.set(entry[1].documentUri, entry[1]);
                 }
             }
 
-            assignTemplateGraphToDeploymentTemplate(e, dt, map);
+            assignTemplateGraphToDeploymentTemplate(e, dt, loadedTemplatesMap);
         }
     }
 }

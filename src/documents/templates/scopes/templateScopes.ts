@@ -386,7 +386,7 @@ export class LinkedTemplateScope extends TemplateScope implements IChildDeployme
     private _linkedFileParameterDefinitions: IParameterDefinition[] | undefined;
     public setLinkedFileReferences(
         linkedFileReferences: ILinkedTemplateReference[] | undefined,
-        loadedTemplates: NormalizedMap<Uri, DeploymentTemplateDoc>
+        allLoadedTemplates: NormalizedMap<Uri, DeploymentTemplateDoc>
     ): void {
         //asdf cache?
 
@@ -395,7 +395,7 @@ export class LinkedTemplateScope extends TemplateScope implements IChildDeployme
         this.clearCaches();
 
         if (linkedFileReferences && linkedFileReferences.length > 0) {
-            this._linkedFileParameterDefinitions = getParameterDefinitionsFromLinkedTemplate(linkedFileReferences[0/*asdf*/], loadedTemplates); //asdf move to caller
+            this._linkedFileParameterDefinitions = getParameterDefinitionsFromLinkedTemplate(linkedFileReferences[0/*asdf*/], allLoadedTemplates); //asdf move to caller
         }
 
         this._linkedFileReferences = linkedFileReferences;

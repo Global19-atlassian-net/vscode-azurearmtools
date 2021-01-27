@@ -234,9 +234,17 @@ export class LinkedTemplateCodeLens extends ResolvableCodeLens {
     ): LinkedTemplateCodeLens[] {
         let title = "Linked template";
         const isRelativePath = scope.isRelativePath;
+        const hasParameterFile = !!topLevelParameterValuesProvider?.parameterFileUri;
 
-        if (scope.isRelativePath) {
+        // Currently only dealing with the first reference at the same location (e.g. if in a copy loop, multiple
+        // instances will be at the same ilne)
+        const firstLinkedTemplateRef = linkedTemplateReferences ? linkedTemplateReferences[0] : undefined;
+
+        if (isRelativePath) {
             title = "Relative linked template";
+            if (!hasParameterFile) {
+                title += " " + "(validation disabled)";
+            }
         } else {
             title = "Linked template  ($(warning) Validation with uri not yet supported, consider using relativePath property)";
         }
@@ -244,43 +252,12 @@ export class LinkedTemplateCodeLens extends ResolvableCodeLens {
         let loadState: string | undefined;
 
         // If language server not running yet, show language server state instead of file load state
-        //asdf update code lens when running
-        if (ext.languageServerState !== LanguageServerState.Running) {
-            switch (ext.languageServerState) {
-                case LanguageServerState.Failed:
-                    loadState = "language server failed to start";
-                    break;
-                case LanguageServerState.NotStarted:
-                    loadState = "language server not started";
-                    break;
-                case LanguageServerState.Starting:
-                    loadState = "starting up...";
-                    break;
-                case LanguageServerState.Stopped:
-                    loadState = "language server stopped";
-                    break;
-                case LanguageServerState.LoadingSchemas:
-                    loadState = "loading schemas...";
-                    break;
-                default:
-                    assertNever(ext.languageServerState);
-            }
-        }
+        loadState = getLoadStateFromLanguageServerStatus();
 
-        if (linkedTemplateReferences && linkedTemplateReferences.length > 0 && !loadState) {
-            const ref = linkedTemplateReferences[0];
-            title += `: "${ref.originalPath}"`;
+        if (firstLinkedTemplateRef && !loadState) {
+            title += `: "${firstLinkedTemplateRef.originalPath}"`;
 
-            switch (ref.loadState) {
-                case LinkedFileLoadState.LoadFailed: loadState = `$(error) ${ref.loadErrorMessage ?? 'Load failed'}`; break;
-                case LinkedFileLoadState.Loading: loadState = "loading..."; break;
-                case LinkedFileLoadState.NotLoaded: loadState = "not loaded"; break;
-                case LinkedFileLoadState.NotSupported: loadState = ""; break;
-                case LinkedFileLoadState.SuccessfullyLoaded: loadState = ""; break;
-                case LinkedFileLoadState.TooDeep: loadState = ""; break;
-                default:
-                    assertNever(ref.loadState);
-            }
+            loadState = getLinkedFileLoadStateLabelSuffix(firstLinkedTemplateRef);
         }
 
         if (loadState) {
@@ -289,7 +266,7 @@ export class LinkedTemplateCodeLens extends ResolvableCodeLens {
 
         const lenses: LinkedTemplateCodeLens[] = [new LinkedTemplateCodeLens(scope, span, title)];
 
-        if (isRelativePath && !topLevelParameterValuesProvider?.parameterFileUri) {
+        if (isRelativePath && !hasParameterFile) {
             lenses.push(
                 new SelectParameterFileCodeLens(
                     scope,
@@ -302,6 +279,46 @@ export class LinkedTemplateCodeLens extends ResolvableCodeLens {
         }
 
         return lenses;
+
+        function getLoadStateFromLanguageServerStatus(): string | undefined {
+            switch (ext.languageServerState) {
+                case LanguageServerState.Running:
+                    // Everything fine, no need for state to be displayed in label
+                    return undefined;
+                case LanguageServerState.Failed:
+                    return "language server failed to start";
+                case LanguageServerState.NotStarted:
+                    return "language server not started";
+                case LanguageServerState.Starting:
+                    return "starting up...";
+                case LanguageServerState.Stopped:
+                    return "language server stopped";
+                case LanguageServerState.LoadingSchemas:
+                    return "loading schemas...";
+                default:
+                    assertNever(ext.languageServerState);
+            }
+        }
+
+        function getLinkedFileLoadStateLabelSuffix(ref: ILinkedTemplateReference): string {
+            switch (ref.loadState) {
+                case LinkedFileLoadState.LoadFailed:
+                    return `$(error) ${ref.loadErrorMessage ?? 'Load failed'}`;
+                case LinkedFileLoadState.Loading:
+                    return "loading...";
+                case LinkedFileLoadState.NotLoaded:
+                    return "not loaded";
+                case LinkedFileLoadState.NotSupported:
+                case LinkedFileLoadState.TooDeep:
+                    // An error will be shown already
+                    return "";
+                case LinkedFileLoadState.SuccessfullyLoaded:
+                    // Don't need an extra status for successful operation
+                    return "";
+                default:
+                    assertNever(ref.loadState);
+            }
+        }
     }
 
     public async resolve(): Promise<boolean> {

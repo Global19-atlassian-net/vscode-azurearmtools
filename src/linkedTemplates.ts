@@ -157,7 +157,7 @@ async function tryOpenLinkedFile2asdf(
             ext.outputChannel.appendLine(`... Setting langid to ${armTemplateLanguageId}`);
             context.telemetry.properties.isLinkedTemplate = 'true';
             setLangIdToArm(document, context);
-            //asdf how wait?
+            //do we try to wait?
         }
 
         // No errors
@@ -173,7 +173,7 @@ async function tryOpenLinkedFile2asdf(
 export function assignTemplateGraphToDeploymentTemplate(
     graph: INotifyTemplateGraphArgs,
     dt: DeploymentTemplateDoc,
-    loadedTemplates: NormalizedMap<Uri, DeploymentTemplateDoc>
+    allLoadedTemplates: NormalizedMap<Uri, DeploymentTemplateDoc> //asdf better to pass a function to get a loaded template?
 ): void { //asdf this is called a lot of times
     assert(normalizePath(Uri.parse(graph.rootTemplateUri)) === normalizePath(dt.documentUri));
 
@@ -194,7 +194,7 @@ export function assignTemplateGraphToDeploymentTemplate(
         if (matchingScope) {
             //asdf reentrancy - precalculate?  No need to set param values source multiple times for COPY loop
             //matchingScope.linkedFileReferences?.push(linkReference);
-            matchingScope.setLinkedFileReferences([linkReference], loadedTemplates);
+            matchingScope.setLinkedFileReferences([linkReference], allLoadedTemplates);
         }
 
         //asdf

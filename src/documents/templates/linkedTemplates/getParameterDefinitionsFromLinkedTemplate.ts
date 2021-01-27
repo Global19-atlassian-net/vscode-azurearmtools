@@ -11,12 +11,12 @@ import { DeploymentTemplateDoc } from "../DeploymentTemplateDoc";
 
 //asdf cache?
 //asdf
-export function getParameterDefinitionsFromLinkedTemplate(
+export function getParameterDefinitionsFromLinkedTemplate(//asdf
     linkedTemplate: ILinkedTemplateReference,
-    loadedTemplates: NormalizedMap<Uri, DeploymentTemplateDoc>
+    allLoadedTemplates: NormalizedMap<Uri, DeploymentTemplateDoc>
 ): IParameterDefinition[] {
     //asdf const result = await tryOpenLinkedFile/*asdf*/(linkedTemplate.fullUri, PathType.templateRelativeLink/*asdf*/);
-    const dt = loadedTemplates.get(Uri.parse(linkedTemplate.fullUri, true)); //asdf
+    const dt = allLoadedTemplates.get(Uri.parse(linkedTemplate.fullUri, true)); //asdf
     if (dt) {
         return dt.topLevelScope.parameterDefinitions;
     }
