@@ -9,6 +9,7 @@ import * as TLE from "../../../language/expressions/TLE";
 import { CachedValue } from '../../../util/CachedValue';
 import { IParameterDefinition } from '../../parameters/IParameterDefinition';
 import { IParameterDefinitionsSource } from '../../parameters/IParameterDefinitionsSource';
+import { IParameterDefinitionsSourceProvider } from "../../parameters/IParameterDefinitionsSourceProvider";
 import { IParameterValuesSource } from '../../parameters/IParameterValuesSource';
 import { IJsonDocument } from '../IJsonDocument';
 import { IResource } from '../IResource';
@@ -36,8 +37,7 @@ export enum TemplateScopeKind {
 /**
  * Represents the scoped access of parameters/variables/functions at a particular point in the template tree.
  */
-export abstract class TemplateScope implements IParameterDefinitionsSource {
-    private _parameterDefinitions: CachedValue<IParameterDefinition[] | undefined> = new CachedValue<IParameterDefinition[] | undefined>();
+export abstract class TemplateScope implements IParameterDefinitionsSourceProvider {
     private _variableDefinitions: CachedValue<IVariableDefinition[] | undefined> = new CachedValue<IVariableDefinition[] | undefined>();
     private _functionDefinitions: CachedValue<UserFunctionNamespaceDefinition[] | undefined> = new CachedValue<UserFunctionNamespaceDefinition[] | undefined>();
     private _resources: CachedValue<IResource[] | undefined> = new CachedValue<IResource[] | undefined>();
@@ -90,11 +90,6 @@ export abstract class TemplateScope implements IParameterDefinitionsSource {
         return this.rootObject;
     }
 
-    // undefined means not supported in this context
-    protected getParameterDefinitions(): IParameterDefinition[] | undefined {
-        // undefined means not supported in this context
-        return undefined;
-    }
     protected getVariableDefinitions(): IVariableDefinition[] | undefined {
         // undefined means not supported in this context
         return undefined;
@@ -115,9 +110,12 @@ export abstract class TemplateScope implements IParameterDefinitionsSource {
         return undefined;
     }
 
-    public get parameterDefinitions(): IParameterDefinition[] { // externalParameterDefinitions??
-        return this._parameterDefinitions.getOrCacheValue(() => this.getParameterDefinitions())
-            ?? [];
+    protected abstract getParameterDefinitionsSource(): IParameterDefinitionsSource;
+
+    public get parameterDefinitions(): IParameterDefinition[] {
+        // Note: This must not be cached, as a deployment template's parameter definitions can change when
+        //   linked template processing is completed.
+        return this.getParameterDefinitionsSource().parameterDefinitions;
     }
 
     public get variableDefinitions(): IVariableDefinition[] {
@@ -140,8 +138,12 @@ export abstract class TemplateScope implements IParameterDefinitionsSource {
         return this.getParameterValuesSource();
     }
 
-    public clearCaches(): void {
-        this._parameterDefinitions.clear(); //asdf others?
+    public get parameterDefinitionsSource(): IParameterDefinitionsSource {
+        return this.getParameterDefinitionsSource(); //asdf caching issues?
+    }
+
+    public clearCaches(): void {//asdf remove
+        // this._parameterDefinitions.clear(); //asdf others? //asdfasdf?
     }
 
     public get childScopes(): TemplateScope[] {
@@ -172,8 +174,8 @@ export abstract class TemplateScope implements IParameterDefinitionsSource {
             let parameterNameLC = unquotedParameterName.toLowerCase();
 
             // Find the last definition that matches, because that's what Azure does if there are matching names
-            for (let i = this.parameterDefinitions.length - 1; i >= 0; --i) {
-                let pd = this.parameterDefinitions[i];
+            for (let i = this.parameterDefinitionsSource.parameterDefinitions.length - 1; i >= 0; --i) {
+                let pd = this.parameterDefinitionsSource.parameterDefinitions[i];
                 if (pd.nameValue.toString().toLowerCase() === parameterNameLC) {
                     return pd;
                 }

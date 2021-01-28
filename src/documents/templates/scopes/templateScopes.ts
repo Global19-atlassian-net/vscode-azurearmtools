@@ -11,9 +11,11 @@ import * as Json from "../../../language/json/JSON";
 import { assertNever } from "../../../util/assertNever";
 import { NormalizedMap } from "../../../util/NormalizedMap";
 import { IParameterDefinition } from "../../parameters/IParameterDefinition";
+import { IParameterDefinitionsSource } from "../../parameters/IParameterDefinitionsSource";
 import { IParameterValuesSource } from "../../parameters/IParameterValuesSource";
 import { ParameterDefinition } from "../../parameters/ParameterDefinition";
 import { ParameterValuesSourceFromJsonObject } from "../../parameters/ParameterValuesSourceFromJsonObject";
+import { SimpleParameterDefinitionsSource } from "../../parameters/SimpleParameterDefinitionsSource";
 import { DeploymentTemplateDoc } from "../DeploymentTemplateDoc";
 import { IJsonDocument } from "../IJsonDocument";
 import { IResource } from "../IResource";
@@ -38,6 +40,10 @@ export class EmptyScope extends TemplateScope {
     ) {
         super(new DeploymentTemplateDoc('', Uri.parse('https://emptydoc', true)), undefined, undefined, "Empty Scope");
     }
+
+    protected getParameterDefinitionsSource(): IParameterDefinitionsSource {
+        return new SimpleParameterDefinitionsSource([]);
+    }
 }
 
 export class UserFunctionScope extends TemplateScope {
@@ -53,12 +59,6 @@ export class UserFunctionScope extends TemplateScope {
 
     public readonly scopeKind: TemplateScopeKind = TemplateScopeKind.UserFunction;
 
-    protected getParameterDefinitions(): IParameterDefinition[] | undefined {
-        // User functions can only use their own parameters, they do
-        //   not have access to top-level parameters
-        return this.userFunctionParameterDefinitions;
-    }
-
     protected getVariableDefinitions(): IVariableDefinition[] | undefined {
         // variable references not supported in user functions
         return undefined;
@@ -68,9 +68,16 @@ export class UserFunctionScope extends TemplateScope {
         // nested user functions not supported in user functions
         return undefined;
     }
+
+    protected getParameterDefinitionsSource(): IParameterDefinitionsSource {
+        // User functions can only use their own parameters, they do
+        //   not have access to top-level parameters
+        return new SimpleParameterDefinitionsSource(this.userFunctionParameterDefinitions);
+    }
 }
 
 abstract class TemplateScopeFromObject extends TemplateScope {
+    private _parameterDefinitionsSource: IParameterDefinitionsSource;
     public constructor(
         document: IJsonDocument,
         private _templateRootObject: Json.ObjectValue | undefined,
@@ -78,14 +85,15 @@ abstract class TemplateScopeFromObject extends TemplateScope {
         __debugDisplay: string
     ) {
         super(document, _templateRootObject, getDeploymentScopeReferenceFromRootObject(_templateRootObject), __debugDisplay);
+        this._parameterDefinitionsSource = new SimpleParameterDefinitionsSource(getParameterDefinitionsFromObject(this.document, this._templateRootObject));
     }
 
-    protected getParameterDefinitions(): IParameterDefinition[] | undefined {
-        return getParameterDefinitionsFromObject(this._templateRootObject);
+    protected getParameterDefinitionsSource(): IParameterDefinitionsSource {
+        return this._parameterDefinitionsSource;
     }
 
     protected getVariableDefinitions(): IVariableDefinition[] | undefined {
-        return getVariableDefinitionsFromObject(this._templateRootObject);
+        return getVariableDefinitionsFromObject(this._templateRootObject); //asdf add doc to vars too?
     }
 
     protected getNamespaceDefinitions(): UserFunctionNamespaceDefinition[] | undefined {
@@ -114,14 +122,14 @@ export class TopLevelTemplateScope extends TemplateScopeFromObject {
     public readonly scopeKind: TemplateScopeKind = TemplateScopeKind.TopLevel;
 }
 
-function getParameterDefinitionsFromObject(objectValue: Json.ObjectValue | undefined): ParameterDefinition[] {
+function getParameterDefinitionsFromObject(document: IJsonDocument, objectValue: Json.ObjectValue | undefined): ParameterDefinition[] {
     const parameterDefinitions: ParameterDefinition[] = [];
 
     if (objectValue) {
         const parameters: Json.ObjectValue | undefined = Json.asObjectValue(objectValue.getPropertyValue(templateKeys.parameters));
         if (parameters) {
             for (const parameter of parameters.properties) {
-                parameterDefinitions.push(new ParameterDefinition(parameter));
+                parameterDefinitions.push(new ParameterDefinition(document, parameter));
             }
         }
     }
@@ -324,18 +332,14 @@ export class NestedTemplateOuterScope extends TemplateScope /*asdf implements IC
         return this.parentScope.memberOwningRootObject;
     }
 
-    protected getParameterDefinitions(): IParameterDefinition[] | undefined {
-        // tslint:disable-next-line: no-non-null-assertion // constructor guarantees not undefined
-        return this.parentScope.parameterDefinitions;
+    protected getParameterDefinitionsSource(): IParameterDefinitionsSource {
+        return this.parentScope.parameterDefinitionsSource;
     }
-
     protected getVariableDefinitions(): IVariableDefinition[] | undefined {
-        // tslint:disable-next-line: no-non-null-assertion // constructor guarantees not undefined
         return this.parentScope.variableDefinitions;
     }
 
     protected getNamespaceDefinitions(): UserFunctionNamespaceDefinition[] | undefined {
-        // tslint:disable-next-line: no-non-null-assertion // constructor guarantees not undefined
         return this.parentScope.namespaceDefinitions;
     }
 
@@ -346,6 +350,7 @@ export class NestedTemplateOuterScope extends TemplateScope /*asdf implements IC
 
 export class LinkedTemplateScope extends TemplateScope implements IChildDeploymentScope {
     private _parameterValuesSource: ParameterValuesSourceFromJsonObject;
+    //asfdasdf private _parameterDefinitionsSource: ParameterDefinitionsSource | undefined;
 
     public constructor(
         parentScope: TemplateScope,
@@ -383,7 +388,8 @@ export class LinkedTemplateScope extends TemplateScope implements IChildDeployme
     // This is detected after the tree is created, so is set when available.
     public get linkedFileReferences(): ILinkedTemplateReference[] | undefined { return this._linkedFileReferences; }
     private _linkedFileReferences: ILinkedTemplateReference[] | undefined;
-    private _linkedFileParameterDefinitions: IParameterDefinition[] | undefined;
+    //private _linkedFileParameterDefinitions: IParameterDefinition[] | undefined; //asdfsadf
+    private _linkedFileParameterDefinitionsSource: SimpleParameterDefinitionsSource = new SimpleParameterDefinitionsSource();
     public setLinkedFileReferences(
         linkedFileReferences: ILinkedTemplateReference[] | undefined,
         allLoadedTemplates: NormalizedMap<Uri, DeploymentTemplateDoc>
@@ -391,11 +397,10 @@ export class LinkedTemplateScope extends TemplateScope implements IChildDeployme
         //asdf cache?
 
         this._linkedFileReferences = undefined;
-        this._linkedFileParameterDefinitions = undefined;
         this.clearCaches();
 
         if (linkedFileReferences && linkedFileReferences.length > 0) {
-            this._linkedFileParameterDefinitions = getParameterDefinitionsFromLinkedTemplate(linkedFileReferences[0/*asdf*/], allLoadedTemplates); //asdf move to caller
+            this._linkedFileParameterDefinitionsSource.setParameterDefinitions(getParameterDefinitionsFromLinkedTemplate(linkedFileReferences[0/*asdf*/], allLoadedTemplates)); //asdf move to caller
         }
 
         this._linkedFileReferences = linkedFileReferences;
@@ -445,11 +450,6 @@ export class LinkedTemplateScope extends TemplateScope implements IChildDeployme
 
     public readonly isExternal: boolean = true;
 
-    protected getParameterDefinitions(): IParameterDefinition[] | undefined {
-        return this._linkedFileParameterDefinitions;
-        //asdf? return this.parentScope.parameterDefinitions;
-    }
-
     protected getVariableDefinitions(): IVariableDefinition[] | undefined {
         return undefined;
     }
@@ -464,6 +464,10 @@ export class LinkedTemplateScope extends TemplateScope implements IChildDeployme
 
     protected getParameterValuesSource(): IParameterValuesSource | undefined {
         return this._parameterValuesSource;
+    }
+
+    protected getParameterDefinitionsSource(): IParameterDefinitionsSource {
+        return this._linkedFileParameterDefinitionsSource;
     }
 }
 

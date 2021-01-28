@@ -343,9 +343,6 @@ function onNotifyTemplateGraph(args: INotifyTemplateGraphArgs): void {
 }
 
 function onSchemaValidationNotication(args: notifications.ISchemaValidationNotificationArgs): void {
-    console.warn(`SchemaValidationNotification: `); //asdf
-    console.warn(args); //asdf
-
     if (!haveFirstSchemasStartedLoading) {
         haveFirstSchemasStartedLoading = true;
     }

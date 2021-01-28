@@ -96,7 +96,7 @@ setup(function (this: Mocha.IBeforeAndAfterContext): void {
 
 // Runs after each individual test
 teardown(function (this: Mocha.IBeforeAndAfterContext): void {
-    console.warn("Teardown");
+    // console.warn("Teardown");
     if (!this.currentTest.state || this.currentTest.state === 'failed') {
         console.warn(`\n========= TESTLOG =========:\n${testLog.toString()}\n`);
         deleteTestLog();

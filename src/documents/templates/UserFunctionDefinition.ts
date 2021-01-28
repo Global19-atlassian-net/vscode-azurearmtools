@@ -82,7 +82,7 @@ export class UserFunctionDefinition implements INamedDefinition {
                 for (const parameter of parametersArray.elements) {
                     const parameterObject = Json.asObjectValue(parameter);
                     if (parameterObject) {
-                        const parameterDefinition = UserFunctionParameterDefinition.createIfValid(parameterObject);
+                        const parameterDefinition = UserFunctionParameterDefinition.createIfValid(this.document, parameterObject);
                         if (parameterDefinition) {
                             parameterDefinitions.push(parameterDefinition);
                         }

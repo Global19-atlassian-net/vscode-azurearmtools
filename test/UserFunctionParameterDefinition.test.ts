@@ -5,27 +5,22 @@
 // tslint:disable:no-unused-expression no-non-null-assertion
 
 import * as assert from "assert";
+import { Uri } from "vscode";
 import { Json, Span, UserFunctionParameterDefinition } from "../extension.bundle";
+import { DeploymentTemplateDoc } from "../src/documents/templates/DeploymentTemplateDoc";
+import { IJsonDocument } from "../src/documents/templates/IJsonDocument";
 import { createStringProperty } from "./support/jsonCreation";
 
 const fakeSpan = new Span(10, 20);
 
 suite("UserFunctionParameterDefinition", () => {
     suite("constructor(Json.Property)", () => {
-        test("with null", () => {
-            // tslint:disable-next-line:no-any
-            assert.throws(() => { UserFunctionParameterDefinition.createIfValid(<any>null); });
-        });
-
-        test("with undefined", () => {
-            // tslint:disable-next-line:no-any
-            assert.throws(() => { UserFunctionParameterDefinition.createIfValid(<any>undefined); });
-        });
+        const doc: IJsonDocument = new DeploymentTemplateDoc("", Uri.parse('https://doc'));
 
         test("with no fields (invalid without name)", () => {
             const parameterDefinition = new Json.ObjectValue(new Span(16, 2), []);
 
-            const pd = UserFunctionParameterDefinition.createIfValid(parameterDefinition);
+            const pd = UserFunctionParameterDefinition.createIfValid(doc, parameterDefinition);
 
             assert(!pd, "Without a name should be invalid");
         });
@@ -34,7 +29,7 @@ suite("UserFunctionParameterDefinition", () => {
             const nameProperty = createStringProperty("name", "parameterName");
             const paramObject = new Json.ObjectValue(fakeSpan, [nameProperty]);
 
-            let pd = UserFunctionParameterDefinition.createIfValid(paramObject);
+            let pd = UserFunctionParameterDefinition.createIfValid(doc, paramObject);
 
             assert(pd, "Should be valid with name");
             pd = pd!;
@@ -50,7 +45,7 @@ suite("UserFunctionParameterDefinition", () => {
             const nameProperty = createStringProperty("NAme", "parameterName");
             const paramObject = new Json.ObjectValue(fakeSpan, [nameProperty]);
 
-            let pd = UserFunctionParameterDefinition.createIfValid(paramObject);
+            let pd = UserFunctionParameterDefinition.createIfValid(doc, paramObject);
 
             assert(pd, "Should be valid with name");
             pd = pd!;
@@ -67,7 +62,7 @@ suite("UserFunctionParameterDefinition", () => {
                     createStringProperty("unexpectedField", "Look Ma, too many hands!")
                 ]);
 
-            let pd = UserFunctionParameterDefinition.createIfValid(paramObject);
+            let pd = UserFunctionParameterDefinition.createIfValid(doc, paramObject);
 
             assert(pd, "Should be valid with name");
             pd = pd!;

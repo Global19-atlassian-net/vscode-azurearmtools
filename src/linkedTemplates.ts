@@ -188,7 +188,7 @@ export function assignTemplateGraphToDeploymentTemplate(
     for (const linkReference of graph.linkedTemplates) {
         const linkPositionInTemplate = dt.getDocumentCharacterIndex(linkReference.lineNumberInParent, linkReference.columnNumberInParent);
 
-        // Since templated deployments can't have children (in the defining document), there can be at most linked deployment scopes whose defining
+        // Since templated deployments can't have children (in the defining document), there can be at most one linked deployment scope whose defining
         //   resource contains the location
         const matchingScope = linkedScopes.find(scope => scope.owningDeploymentResource.span.contains(linkPositionInTemplate, ContainsBehavior.enclosed));
         if (matchingScope) {

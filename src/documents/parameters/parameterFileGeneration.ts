@@ -114,7 +114,7 @@ export function createParameterFromTemplateParameter(parameterDefinitionsSource:
             isTleExpression(parameter.defaultValue.unquotedValue);
         if (!isExpression) {
             const defValueSpan = parameter.defaultValue.span;
-            const defValue: string = parameterDefinitionsSource.document.documentText.slice(defValueSpan.startIndex, defValueSpan.afterEndIndex);
+            const defValue: string = parameter.document.documentText.slice(defValueSpan.startIndex, defValueSpan.afterEndIndex);
             value = unindentMultilineString(defValue, true);
         }
     }
@@ -161,9 +161,9 @@ function getDefaultValueFromType(propType: ExpressionType | undefined, indent: n
 function createParameters(scope: TemplateScope, tabSize: number, onlyRequiredParameters: boolean): CaseInsensitiveMap<string, string> {
     let params: CaseInsensitiveMap<string, string> = new CaseInsensitiveMap<string, string>();
 
-    for (let paramDef of scope.parameterDefinitions) {
+    for (let paramDef of scope.parameterDefinitionsSource.parameterDefinitions) {
         if (!onlyRequiredParameters || !paramDef.defaultValue) {
-            params.set(paramDef.nameValue.unquotedValue, createParameterFromTemplateParameter(scope, paramDef, tabSize));
+            params.set(paramDef.nameValue.unquotedValue, createParameterFromTemplateParameter(scope.parameterDefinitionsSource, paramDef, tabSize));
         }
     }
 

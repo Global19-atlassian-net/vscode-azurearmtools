@@ -9,28 +9,11 @@ import { NormalizedMap } from "../../../util/NormalizedMap";
 import { IParameterDefinition } from "../../parameters/IParameterDefinition";
 import { DeploymentTemplateDoc } from "../DeploymentTemplateDoc";
 
-//asdf cache?
-//asdf
-export function getParameterDefinitionsFromLinkedTemplate(//asdf
+export function getParameterDefinitionsFromLinkedTemplate(
     linkedTemplate: ILinkedTemplateReference,
     allLoadedTemplates: NormalizedMap<Uri, DeploymentTemplateDoc>
 ): IParameterDefinition[] {
-    //asdf const result = await tryOpenLinkedFile/*asdf*/(linkedTemplate.fullUri, PathType.templateRelativeLink/*asdf*/);
     const dt = allLoadedTemplates.get(Uri.parse(linkedTemplate.fullUri, true)); //asdf
-    if (dt) {
-        return dt.topLevelScope.parameterDefinitions;
-    }
-
-    return [];
+    return dt?.topLevelScope.parameterDefinitionsSource.parameterDefinitions.slice() // clone
+        ?? [];
 }
-
-//asdf
-// export async function getParameterValuesSourceFromLinkedTemplate(linkedTemplate: ILinkedTemplateReference): Promise<IParameterValuesSource | undefined> {
-//     const result = await tryOpenLinkedFile/*asdf*/(linkedTemplate.fullUri, PathType.templateRelativeLink/*asdf*/);
-//     if (result.document) {
-//         const templateContent = result.document?.getText();
-//         return new DeploymentParametersDoc(templateContent, result.document.uri).parameterValuesSource;
-//     }
-
-//     return undefined;
-// }

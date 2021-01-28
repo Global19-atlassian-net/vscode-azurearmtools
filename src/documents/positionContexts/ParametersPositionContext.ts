@@ -81,7 +81,7 @@ export class ParametersPositionContext extends PositionContext {
     public async getCompletionItems(triggerCharacter: string | undefined): Promise<ICompletionItemsResult> {
         return {
             items: getPropertyValueCompletionItems(
-                this._associatedTemplate?.topLevelScope,
+                this._associatedTemplate?.topLevelScope.parameterDefinitionsSource,
                 this.document.parameterValuesSource,
                 this.documentCharacterIndex,
                 triggerCharacter

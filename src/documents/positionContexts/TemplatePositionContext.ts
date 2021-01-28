@@ -407,7 +407,7 @@ export class TemplatePositionContext extends PositionContext {
         for (let uniqueScope of this.document.uniqueScopes) {
             if (uniqueScope.parameterValuesSource) {
                 completions.push(...getPropertyValueCompletionItems(
-                    uniqueScope,
+                    uniqueScope.parameterDefinitionsSource,
                     uniqueScope.parameterValuesSource,
                     this.documentCharacterIndex,
                     triggerCharacter));
@@ -964,7 +964,7 @@ export class TemplatePositionContext extends PositionContext {
 
         const parameterCompletions: Completion.Item[] = [];
         if (replaceSpanInfo) {
-            for (const parameterDefinition of scope.parameterDefinitions) {
+            for (const parameterDefinition of scope.parameterDefinitionsSource.parameterDefinitions) {
                 parameterCompletions.push(Completion.Item.fromParameterDefinition(parameterDefinition, replaceSpanInfo.replaceSpan, replaceSpanInfo.includeRightParenthesisInCompletion, replaceSpanInfo.includeSingleQuotesInCompletion));
             }
         }

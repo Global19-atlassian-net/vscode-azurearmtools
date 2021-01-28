@@ -117,7 +117,7 @@ suite("Linked templates functional tests", () => {
                 startArmLanguageServerInBackground();
                 const client = await ensureLanguageServerAvailable();
                 client.onNotification(notifications.Diagnostics.codeAnalysisStarting, async (args: notifications.Diagnostics.ICodeAnalysisStartingArgs) => {
-                    testLog.writeLine(JSON.stringify(args, null, 2)); //asdfasdf remove
+                    //testLog.writeLine(JSON.stringify(args, null, 2)); //asdfasdf remove
                 });
 
                 // Create promise to wait for child graphs to be available

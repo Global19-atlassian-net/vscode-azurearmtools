@@ -351,7 +351,7 @@ export class AzureRMTools {
                 let { doc, associatedDoc: template } = await this.getDeploymentDocAndAssociatedDoc(editor.document, Cancellation.cantCancel);
                 if (doc instanceof DeploymentParametersDoc) {
                     parameterValues = doc.parameterValuesSource;
-                    parameterDefinitions = expectTemplateDocument(template).topLevelScope;
+                    parameterDefinitions = expectTemplateDocument(template).topLevelScope.parameterDefinitionsSource;
                 }
             } else {
                 // Called from a code action, we should already have the parameter values source
@@ -619,7 +619,7 @@ export class AzureRMTools {
             measurements.parseDurationInMilliseconds = stopwatch.duration.totalMilliseconds;
             measurements.lineCount = deploymentTemplate.lineCount;
             measurements.maxLineLength = deploymentTemplate.getMaxLineLength();
-            measurements.paramsCount = deploymentTemplate.topLevelScope.parameterDefinitions.length;
+            measurements.paramsCount = deploymentTemplate.topLevelScope.parameterDefinitionsSource?.parameterDefinitions.length; //asdf
             measurements.varsCount = deploymentTemplate.topLevelScope.variableDefinitions.length;
             measurements.namespacesCount = deploymentTemplate.topLevelScope.namespaceDefinitions.length;
             measurements.userFunctionsCount = totalUserFunctionsCount;

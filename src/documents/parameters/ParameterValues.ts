@@ -26,7 +26,7 @@ const newParameterValueSnippetLabel = `new-parameter-value`;
  */
 export function getParameterValuesCodeActions(
     parameterValuesSource: IParameterValuesSource,
-    parameterDefinitionsSource: IParameterDefinitionsSource | undefined,
+    parameterDefinitionsSource: IParameterDefinitionsSource,
     // This is the range currently being inspected
     range: Range | Selection,
     context: CodeActionContext
@@ -34,7 +34,7 @@ export function getParameterValuesCodeActions(
     const actions: (Command | CodeAction)[] = [];
     const parametersProperty = parameterValuesSource.parameterValuesProperty;
 
-    if (parametersProperty && parameterDefinitionsSource) {
+    if (parametersProperty) {
         // Is the parameters property in the requested range?
         const lineIndexOfParametersProperty = parameterValuesSource.document.getDocumentPosition(parametersProperty.nameValue.span.startIndex).line;
         if (lineIndexOfParametersProperty >= range.start.line && lineIndexOfParametersProperty <= range.end.line) {
@@ -84,12 +84,12 @@ function isParameterRequired(paramDef: IParameterDefinition): boolean {
 }
 
 export function getMissingParameters(
-    parameterDefinitionsSource: IParameterDefinitionsSource,
+    parameterDefinitionsSource: IParameterDefinitionsSource | undefined/*asdf*/,
     parameterValuesSource: IParameterValuesSource,
     onlyRequiredParameters: boolean
 ): IParameterDefinition[] {
     const results: IParameterDefinition[] = [];
-    for (let paramDef of parameterDefinitionsSource.parameterDefinitions) {
+    for (let paramDef of parameterDefinitionsSource?.parameterDefinitions ?? []) {
         const paramValue = parameterValuesSource.getParameterValue(paramDef.nameValue.unquotedValue);
         if (!paramValue) {
             results.push(paramDef);
@@ -405,7 +405,7 @@ export function canAddPropertyValueHere(
     return true;
 }
 
-export function getMissingParameterErrors(parameterValues: IParameterValuesSource, parameterDefinitions: IParameterDefinitionsSource): Issue[] {
+export function getMissingParameterErrors(parameterValues: IParameterValuesSource, parameterDefinitions: IParameterDefinitionsSource | undefined/*asdf*/): Issue[] {
     const missingRequiredParams: IParameterDefinition[] = getMissingParameters(
         parameterDefinitions,
         parameterValues,

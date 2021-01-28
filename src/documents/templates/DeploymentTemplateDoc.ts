@@ -219,7 +219,7 @@ export class DeploymentTemplateDoc extends DeploymentDocument {
 
         for (const scope of this.uniqueNonExternalScopes) { // Don't consider linked templates, they
             // Unused parameters
-            for (const parameterDefinition of scope.parameterDefinitions) {
+            for (const parameterDefinition of scope.parameterDefinitionsSource.parameterDefinitions) {
                 if (!referenceListsMap.has(parameterDefinition)) {
                     const message = parameterDefinition instanceof UserFunctionParameterDefinition
                         ? `User-function parameter '${parameterDefinition.nameValue.toString()}' is never used.`
@@ -348,10 +348,9 @@ export class DeploymentTemplateDoc extends DeploymentDocument {
     private getMissingParameterErrors(): Issue[] {
         const errors: Issue[] = [];
 
-        //asdfasdf; handle; linked; scopes; differently ?;
-        for (const scope of this.uniqueScopes) { //asdf are linked files a unique scope?  Probably yes
+        for (const scope of this.uniqueScopes) {
             if (scope.parameterValuesSource) {
-                const scopeErrors = getMissingParameterErrors(scope.parameterValuesSource, scope);
+                const scopeErrors = getMissingParameterErrors(scope.parameterValuesSource, scope.parameterDefinitionsSource);
                 errors.push(...scopeErrors);
             }
         }
@@ -520,7 +519,7 @@ export class DeploymentTemplateDoc extends DeploymentDocument {
             if (scope.parameterValuesSource) {
                 const scopeActions = getParameterValuesCodeActions(
                     scope.parameterValuesSource,
-                    scope,
+                    scope.parameterDefinitionsSource,
                     range,
                     context);
                 actions.push(...scopeActions);
@@ -735,8 +734,8 @@ export class DeploymentTemplateDoc extends DeploymentDocument {
         }
 
         // Code lens for each parameter definition
-        if (parameterValuesSourceProvider) { //asdf
-            lenses.push(...uniqueScope.parameterDefinitions.map(pd => new ParameterDefinitionCodeLens(uniqueScope, pd, parameterValuesSourceProvider)));
+        if (parameterValuesSourceProvider) {
+            lenses.push(...uniqueScope.parameterDefinitionsSource.parameterDefinitions.map(pd => new ParameterDefinitionCodeLens(uniqueScope, pd, parameterValuesSourceProvider)));
         }
 
         return lenses;
@@ -761,8 +760,7 @@ export class DeploymentTemplateDoc extends DeploymentDocument {
                         break;
                     case TemplateScopeKind.LinkedDeployment:
                         assert(scope instanceof LinkedTemplateScope, "Expected a LinkedTemplateScope");
-                        //asdfasdf
-                        if (owningDeploymentResource) { //asdf
+                        if (owningDeploymentResource) {
                             const templateLinkObject = scope.templateLinkObject;
                             let span = templateLinkObject ? templateLinkObject.span : owningDeploymentResource.span;
 
