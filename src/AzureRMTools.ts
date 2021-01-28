@@ -1032,10 +1032,10 @@ export class AzureRMTools {
                         fullValidationOn = false;
                     }
 
-                    // Add message to indicate whether full validation is on or off
+                    // Add message to indicate if full validation is disabled
                     statusBarText = fullValidationOn ?
-                        `Full template validation on.  ${statusBarText}` :
-                        `$(warning) Full template validation off (parameter values needed).  ${statusBarText}`;
+                        `${statusBarText}` :
+                        `$(warning) Full template validation off (parameters file or default values needed).  ${statusBarText}`;
 
                     this._paramsStatusBarItem.command = "azurerm-vscode-tools.selectParameterFile";
                     this._paramsStatusBarItem.text = statusBarText;

@@ -121,7 +121,7 @@ suite("Linked templates regressions", () => {
                         }
                     },
                     [
-                        "Error: Template validation failed: Template parameter JToken type is not valid. Expected 'String, Uri'. Actual 'Integer'. Please see https://aka.ms/arm-deploy/#parameter-file for usage details. (arm-template (validation)) [9,21-9,21] [The error occurred in a nested template near here] [14,40-14,40]",
+                        "Error: Template validation failed: Template parameter JToken type is not valid. Expected 'String, Uri'. Actual 'Integer'. Please see https://aka.ms/arm-deploy/#parameter-file for usage details. (arm-template (validation)) [9,21-9,21] [The error occurred in a nested template near here] [13,19-13,19]",
                         "Warning: The parameter 'parameter1' is never used. (arm-template (expressions)) [23,13-23,25]"
                     ]
                 );
