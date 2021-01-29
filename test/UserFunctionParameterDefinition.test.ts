@@ -6,9 +6,7 @@
 
 import * as assert from "assert";
 import { Uri } from "vscode";
-import { Json, Span, UserFunctionParameterDefinition } from "../extension.bundle";
-import { DeploymentTemplateDoc } from "../src/documents/templates/DeploymentTemplateDoc";
-import { IJsonDocument } from "../src/documents/templates/IJsonDocument";
+import { DeploymentTemplateDoc, IJsonDocument, Json, Span, UserFunctionParameterDefinition } from "../extension.bundle";
 import { createStringProperty } from "./support/jsonCreation";
 
 const fakeSpan = new Span(10, 20);

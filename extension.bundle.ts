@@ -42,6 +42,7 @@ export { ExpressionType } from "./src/documents/templates/ExpressionType";
 export { ExtractItem } from "./src/documents/templates/ExtractItem";
 export { looksLikeResourceTypeStringLiteral } from "./src/documents/templates/getResourceIdCompletions";
 export * from "./src/documents/templates/getResourcesInfo";
+export * from "./src/documents/templates/IJsonDocument";
 export { InsertItem } from "./src/documents/templates/insertItem";
 export * from "./src/documents/templates/ISchemaInfo";
 export * from "./src/documents/templates/ParentAndChildCodeLenses";

@@ -6,9 +6,7 @@
 
 import * as assert from "assert";
 import { Uri } from "vscode";
-import { Json, ParameterDefinition, Span } from "../extension.bundle";
-import { DeploymentTemplateDoc } from "../src/documents/templates/DeploymentTemplateDoc";
-import { IJsonDocument } from "../src/documents/templates/IJsonDocument";
+import { DeploymentTemplateDoc, IJsonDocument, Json, ParameterDefinition, Span } from "../extension.bundle";
 
 suite("ParameterDefinition", () => {
     suite("constructor(Json.Property)", () => {
