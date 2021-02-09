@@ -11,7 +11,7 @@ import { IJsonDocument } from "../templates/IJsonDocument";
 /**
  * This class represents the definition of any kind of parameter in a deployment template.
  */
-export interface IParameterDefinition extends INamedDefinition { //asdf should the concept of external be here instead of in scope?  //asdf ie this should have document
+export interface IParameterDefinition extends INamedDefinition {
     // tslint:disable-next-line: no-suspicious-comment
     document: IJsonDocument; // TODO: move to parent
 

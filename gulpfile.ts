@@ -3,8 +3,6 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-//asdf test folder shouldn't get packaged
-
 // tslint:disable:no-unsafe-any no-console prefer-template no-implicit-dependencies export-name
 
 import * as assert from 'assert';
