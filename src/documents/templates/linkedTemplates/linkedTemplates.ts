@@ -150,14 +150,8 @@ export function assignTemplateGraphToDeploymentTemplate(
 ): void { //asdf this is called a lot of times
     assert(normalizePath(Uri.parse(graph.rootTemplateUri)) === normalizePath(dt.documentUri));
 
-    //asdf reentrancy - precalculate?  No need to set param values source multiple times for COPY loop
-
     // Clear current
     const linkedScopes = ofType(dt.allScopes, LinkedTemplateScope);
-    // for (const linkedScope of linkedScopes) {
-    //     //asdf await linkedScope.setLinkedFileReferences(undefined);
-    // }
-
     for (const linkReference of graph.linkedTemplates) {
         const linkPositionInTemplate = dt.getDocumentCharacterIndex(
             linkReference.lineNumberInParent,
@@ -173,29 +167,8 @@ export function assignTemplateGraphToDeploymentTemplate(
         //   resource contains the location
         const matchingScope = linkedScopes.find(scope => scope.owningDeploymentResource.span.contains(linkPositionInTemplate, ContainsBehavior.enclosed));
         if (matchingScope) {
-            //asdf reentrancy - precalculate?  No need to set param values source multiple times for COPY loop
-            //matchingScope.linkedFileReferences?.push(linkReference);
             matchingScope.assignLinkedFileReferences([linkReference], provideOpenDocuments);
         }
-
-        //asdf
-        // const pc = dt.getContextFromDocumentLineAndColumnIndexes(linkReference.lineNumberInParent, linkReference.columnNumberInParent, undefined, true);
-        // const enclosingResource = pc.getEnclosingResource();
-        // if (enclosingResource) {
-        //     if (enclosingResource.getPropertyValue(templateKeys.resourceType)?.asStringValue?.unquotedValue.toLowerCase() === deploymentsResourceTypeLC) {
-        //         // It's a deployment resource - get the "templateLink" object, that's the root object of any linked template deployment
-        //         const templateLinkObjectValue = enclosingResource
-        //             .getPropertyValue(templateKeys.properties)?.asObjectValue
-        //             ?.getPropertyValue(templateKeys.linkedDeploymentTemplateLink)?.asObjectValue;
-        //         const matchingScope = linkedScopes.find(scope => scope.rootObject === templateLinkObjectValue);
-        //         if (matchingScope instanceof LinkedTemplateScope) {
-        //             // Found it
-
-        //             //asdf reentrancy - precalculate?  No need to set param values source multiple times for COPY loop
-        //             //matchingScope.linkedFileReferences?.push(linkReference);
-        //             matchingScope.setLinkedFileReferences([linkReference], loadedTemplates);
-        //         }
-        //     }
     }
 }
 
