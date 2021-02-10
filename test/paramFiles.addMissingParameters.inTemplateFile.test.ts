@@ -9,6 +9,7 @@
 import * as assert from 'assert';
 import { CodeAction, Command, Uri } from 'vscode';
 import { addMissingParameters, assignTemplateGraphToDeploymentTemplate, DeploymentTemplateDoc, getNormalizedDocumentKey, getVSCodeRangeFromSpan, IAddMissingParametersArgs, INotifyTemplateGraphArgs, LinkedFileLoadState, NormalizedMap, ofType, Span } from '../extension.bundle';
+import { DeploymentDocument } from '../src/documents/DeploymentDocument';
 import { TextDocumentFake } from './fakes/TextDocumentFake';
 import { TextEditorFake } from './fakes/TextEditorFake';
 import { getCodeActionContext } from './support/getCodeActionContext';
@@ -73,6 +74,9 @@ suite("Add missing parameters for nested/linked templates", () => {
                 assignTemplateGraphToDeploymentTemplate(graph, dt, {
                     getOpenedDeploymentTemplate: (uri: Uri): DeploymentTemplateDoc | undefined => {
                         return allLoadedTemplates.get(uri);
+                    },
+                    setOpenedDeploymentDocument: (_uri: Uri, _doc: DeploymentDocument): void => {
+                        assert.fail("NYI");
                     }
                 });
             }

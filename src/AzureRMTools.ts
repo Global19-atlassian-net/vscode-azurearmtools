@@ -157,6 +157,8 @@ export class AzureRMTools implements IProvideOpenedDocuments {
 
     // tslint:disable-next-line: max-func-body-length
     constructor(context: vscode.ExtensionContext) {
+        ext.provideOpenedDocuments = this; //asdf?
+
         const jsonOutline: JsonOutlineProvider = new JsonOutlineProvider(context);
         ext.jsonOutlineProvider = jsonOutline;
         context.subscriptions.push(vscode.window.registerTreeDataProvider("azurerm-vscode-tools.template-outline", jsonOutline));
@@ -404,7 +406,7 @@ export class AzureRMTools implements IProvideOpenedDocuments {
     }
 
     // Add the deployment doc to our list of opened deployment docs
-    private setOpenedDeploymentDocument(documentUri: vscode.Uri, deploymentDocument: DeploymentDocument | undefined): void {
+    public setOpenedDeploymentDocument(documentUri: vscode.Uri, deploymentDocument: DeploymentDocument | undefined): void {
         assert(documentUri);
         const documentPathKey = getNormalizedDocumentKey(documentUri);
 
@@ -1738,7 +1740,7 @@ export class AzureRMTools implements IProvideOpenedDocuments {
      * linked templates referenced by that template
      */
     private onTemplateGraphAvailable(e: INotifyTemplateGraphArgs & ITelemetryContext): void {
-
+        //asdf remove line
         const rootTemplateUri = vscode.Uri.parse(e.rootTemplateUri);
         const rootTemplate = this.getOpenedDeploymentTemplate(rootTemplateUri);
 
@@ -1746,7 +1748,7 @@ export class AzureRMTools implements IProvideOpenedDocuments {
             const loadedTemplatesMap: NormalizedMap<vscode.Uri, DeploymentTemplateDoc> = new NormalizedMap<vscode.Uri, DeploymentTemplateDoc>(
                 getNormalizedDocumentKey
             );
-            for (const entry of this._deploymentDocuments) {
+            for (const entry of this._deploymentDocuments) { //asdf remove
                 if (entry[1] instanceof DeploymentTemplateDoc) {
                     loadedTemplatesMap.set(entry[1].documentUri, entry[1]);
                 }

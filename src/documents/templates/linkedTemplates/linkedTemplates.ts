@@ -11,6 +11,7 @@ import { ext } from "../../../extensionVariables";
 import { assert } from '../../../fixed_assert';
 import { IProvideOpenedDocuments } from '../../../IProvideOpenedDocuments';
 import { ContainsBehavior } from "../../../language/Span";
+import { httpGet } from '../../../util/httpGet';
 import { normalizePath } from '../../../util/normalizePath';
 import { ofType } from '../../../util/ofType';
 import { pathExists } from '../../../util/pathExists';
@@ -32,8 +33,9 @@ export interface IRequestOpenLinkedFileArgs {
 /**
  * Response sent back to language server from RequestOpenLinkedFile request
  */
-export interface IRequestOpenLinkedFileResult {
-    loadErrorMessage: string | undefined;
+export interface IRequestOpenLinkedFileResult { // Corresonds to OpenLinkedFileRequest.Result in language server
+    loadErrorMessage?: string;
+    content?: string;
 }
 
 enum PathType {
@@ -79,23 +81,35 @@ export async function onRequestOpenLinkedFile(
         properties.openErrorType = '';
         properties.openResult = 'Error';
 
-        const requestedLinkResolvedPathParsed: Uri = Uri.parse(requestedLinkResolvedUri, true);
+        const requestedLinkUri: Uri = Uri.parse(requestedLinkResolvedUri, true);
 
-        assert(path.isAbsolute(requestedLinkResolvedPathParsed.fsPath), "Internal error: requestedLinkUri should be an absolute path");
+        assert(path.isAbsolute(requestedLinkUri.fsPath), "Internal error: requestedLinkUri should be an absolute path");
 
-        // Strip the path of any query string, and use only the local file path
-        const localPath = requestedLinkResolvedPathParsed.fsPath;
+        if (requestedLinkUri.scheme === 'file') {
+            // Strip the path of any query string, and use only the local file path
+            const localPath = requestedLinkUri.fsPath;
 
-        const result = await tryOpenLinkedFile(localPath, pathType, context);
-        if (result.document) {
-            properties.openResult = 'Loaded';
+            const result = await tryOpenLinkedFile(localPath, pathType, context);
+            if (result.document) {
+                properties.openResult = 'Loaded';
+            } else {
+                const parsedError = parseError(result.loadError);
+                properties.openErrorType = parsedError.errorType;
+            }
+
+            const loadErrorMessage = result.loadError ? parseError(result.loadError).message : undefined;
+            return { loadErrorMessage };
         } else {
-            const parsedError = parseError(result.loadError);
-            properties.openErrorType = parsedError.errorType;
+            try {
+                const content = await httpGet(requestedLinkUri.toString());
+                const dt = new DeploymentTemplateDoc(content, requestedLinkUri);
+                assert(ext.provideOpenedDocuments, "ext.provideOpenedDocuments");
+                ext.provideOpenedDocuments.setOpenedDeploymentDocument(requestedLinkUri, dt);
+                return { content };
+            } catch (error) {
+                return { loadErrorMessage: parseError(error).message };
+            }
         }
-
-        const loadErrorMessage = result.loadError ? parseError(result.loadError).message : undefined;
-        return { loadErrorMessage };
     });
 }
 

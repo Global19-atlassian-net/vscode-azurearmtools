@@ -234,7 +234,7 @@ export class LinkedTemplateCodeLens extends ResolvableCodeLens {
         };
     }
 
-    // tslint:disable-next-line: max-func-body-length asdf
+    // tslint:disable-next-line: max-func-body-length cyclomatic-complexity asdf
     public static create(
         scope: LinkedTemplateScope,
         span: Span,
@@ -257,7 +257,14 @@ export class LinkedTemplateCodeLens extends ResolvableCodeLens {
                 title += " " + "(validation enabled)";
             }
         } else {
-            title = "Linked template  ($(warning) Validation with uri not yet supported, consider using relativePath property)";
+            title = "Linked template";
+            if (!hasParameterFile) {
+                title += " " + "(validation disabled)";
+            } else if (firstLinkedTemplateRef) {
+                title += " " + "(validation enabled)";
+            }
+
+            //asdf title = "Linked template  ($(warning) Validation with uri not yet supported, consider using relativePath property)";
         }
 
         let loadState: string | undefined;
@@ -266,24 +273,25 @@ export class LinkedTemplateCodeLens extends ResolvableCodeLens {
         loadState = getLoadStateFromLanguageServerStatus();
 
         let linkedUri: Uri | undefined;
-        let linkedRelativePath: string | undefined;
+        let linkedDisplayPath: string | undefined = firstLinkedTemplateRef?.fullUri;
         try {
             const templateUri = scope.document.documentUri;
             linkedUri = firstLinkedTemplateRef?.fullUri ? Uri.parse(firstLinkedTemplateRef.fullUri) : undefined;
-            if (linkedUri && templateUri.fsPath) {
+            if (isRelativePath && linkedUri && templateUri.fsPath) {
                 const templateFolder = path.dirname(templateUri.fsPath);
-                linkedRelativePath = path.relative(templateFolder, linkedUri.fsPath);
-                if (!path.isAbsolute(linkedRelativePath) && !linkedRelativePath.startsWith('.')) {
-                    linkedRelativePath = `.${ext.pathSeparator}${linkedRelativePath}`;
+                linkedDisplayPath = path.relative(templateFolder, linkedUri.fsPath);
+                if (!path.isAbsolute(linkedDisplayPath) && !linkedDisplayPath.startsWith('.')) {
+                    linkedDisplayPath = `.${ext.pathSeparator}${linkedDisplayPath}`;
                 }
+                // tslint:disable-next-line: no-empty
             }
         } catch (error) {
             console.warn(parseError(error).message);
         }
 
         if (firstLinkedTemplateRef && !loadState) {
-            if (linkedRelativePath) {
-                title += `: "${linkedRelativePath}"`;
+            if (linkedDisplayPath) {
+                title += `: "${linkedDisplayPath}"`;
             }
 
             loadState = getLinkedFileLoadStateLabelSuffix(firstLinkedTemplateRef);
