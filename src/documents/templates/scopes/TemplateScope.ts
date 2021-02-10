@@ -143,9 +143,9 @@ export abstract class TemplateScope implements IParameterDefinitionsSourceProvid
         return this.getParameterDefinitionsSource(); //asdf caching issues?
     }
 
-    public clearCaches(): void {//asdf remove
-        // this._parameterDefinitions.clear(); //asdf others? //asdfasdf?
-    }
+    // public clearCaches(): void {//asdf remove
+    //     // this._parameterDefinitions.clear(); //asdf others? //asdfasdf?
+    // }
 
     public get childScopes(): TemplateScope[] {
         const scopes: TemplateScope[] = [];

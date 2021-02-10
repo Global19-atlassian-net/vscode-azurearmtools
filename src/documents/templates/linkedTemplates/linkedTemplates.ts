@@ -6,19 +6,19 @@
 import * as path from 'path';
 import { TextDocument, Uri, window, workspace } from "vscode";
 import { callWithTelemetryAndErrorHandling, IActionContext, parseError, TelemetryProperties } from "vscode-azureextensionui";
-import { armTemplateLanguageId } from './constants';
-import { DeploymentTemplateDoc } from './documents/templates/DeploymentTemplateDoc';
-import { LinkedTemplateScope } from './documents/templates/scopes/templateScopes';
-import { setLangIdToArm } from './documents/templates/supported';
-import { Errorish } from './Errorish';
-import { ext } from "./extensionVariables";
-import { assert } from './fixed_assert';
+import { armTemplateLanguageId } from '../../../constants';
+import { Errorish } from '../../../Errorish';
+import { ext } from "../../../extensionVariables";
+import { assert } from '../../../fixed_assert';
+import { ContainsBehavior } from "../../../language/Span";
+import { NormalizedMap } from '../../../util/NormalizedMap';
+import { normalizePath } from '../../../util/normalizePath';
+import { ofType } from '../../../util/ofType';
+import { pathExists } from '../../../util/pathExists';
+import { DeploymentTemplateDoc } from '../../templates/DeploymentTemplateDoc';
+import { LinkedTemplateScope } from '../../templates/scopes/templateScopes';
+import { setLangIdToArm } from '../../templates/supported';
 import { ILinkedTemplateReference } from './ILinkedTemplateReference';
-import { ContainsBehavior } from "./language/Span";
-import { NormalizedMap } from './util/NormalizedMap';
-import { normalizePath } from './util/normalizePath';
-import { ofType } from './util/ofType';
-import { pathExists } from './util/pathExists';
 
 /**
  * Inputs for RequestOpenLinkedFile request sent from language server
@@ -169,8 +169,10 @@ async function tryOpenLinkedFile2asdf(
     }
 }
 
-//asdf doc
-//asdf instead, provide a way for the template to fetch this?
+/**
+ * Propagates the given template graph information as received from the language server into the scopes
+ * in the deployment template, where they can be accessed as needed.
+ */
 export function assignTemplateGraphToDeploymentTemplate(
     graph: INotifyTemplateGraphArgs,
     dt: DeploymentTemplateDoc,
@@ -203,7 +205,7 @@ export function assignTemplateGraphToDeploymentTemplate(
         if (matchingScope) {
             //asdf reentrancy - precalculate?  No need to set param values source multiple times for COPY loop
             //matchingScope.linkedFileReferences?.push(linkReference);
-            matchingScope.setLinkedFileReferences([linkReference], allLoadedTemplates);
+            matchingScope.assignLinkedFileReferences([linkReference], allLoadedTemplates);
         }
 
         //asdf

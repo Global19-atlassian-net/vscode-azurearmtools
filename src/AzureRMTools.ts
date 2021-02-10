@@ -25,6 +25,7 @@ import { ExtractItem } from './documents/templates/ExtractItem';
 import { getNormalizedDocumentKey } from './documents/templates/getNormalizedDocumentKey';
 import { gotoResources } from './documents/templates/gotoResources';
 import { getItemTypeQuickPicks, InsertItem } from "./documents/templates/insertItem";
+import { assignTemplateGraphToDeploymentTemplate, INotifyTemplateGraphArgs, openLinkedTemplateFile } from './documents/templates/linkedTemplates/linkedTemplates';
 import { allSchemas, getPreferredSchema } from './documents/templates/schemas';
 import { LinkedTemplateScope } from './documents/templates/scopes/templateScopes';
 import { getQuickPickItems, sortTemplate } from "./documents/templates/sortTemplate";
@@ -38,7 +39,6 @@ import * as Json from "./language/json/JSON";
 import { ReferenceList } from "./language/ReferenceList";
 import { Span } from "./language/Span";
 import { notifyTemplateGraphAvailable, startArmLanguageServerInBackground } from "./languageclient/startArmLanguageServer";
-import { assignTemplateGraphToDeploymentTemplate, INotifyTemplateGraphArgs, openLinkedTemplateFile } from './linkedTemplates';
 import { showInsertionContext } from "./snippets/showInsertionContext";
 import { SnippetManager } from "./snippets/SnippetManager";
 import { survey } from "./survey";
@@ -414,8 +414,6 @@ export class AzureRMTools {
         }
 
         this._codeLensChangedEmitter.fire();
-        //asdf update errors as well (but only if deployment doc?)
-
     }
 
     private getOpenedDeploymentDocument(documentOrUri: vscode.TextDocument | vscode.Uri): DeploymentDocument | undefined {
@@ -721,9 +719,6 @@ export class AzureRMTools {
     ): Promise<IErrorsAndWarnings | undefined> {
         return await callWithTelemetryAndErrorHandling('reportDeploymentTemplateErrors', async (actionContext: IActionContext): Promise<IErrorsAndWarnings> => {
             actionContext.telemetry.suppressIfSuccessful = true;
-
-            //asdf don't do twice for same template
-            this.setUpTemplate(deploymentTemplate); //asdf - should it be async?
 
             // Note: Associated parameters? Not currently used by getErrors
             const associatedParameters: DeploymentParametersDoc | undefined = undefined;
@@ -1094,7 +1089,7 @@ export class AzureRMTools {
                 incorrectArgs?: string;
             } & TelemetryProperties = actionContext.telemetry.properties;
 
-            let issues: Issue[] = deploymentTemplate.getErrors(undefined); //asdf cached?  But that's a problem with linked templates
+            let issues: Issue[] = deploymentTemplate.getErrors(undefined);
 
             // Full function counts
             const functionCounts: Histogram = deploymentTemplate.getFunctionCounts();
@@ -1183,9 +1178,9 @@ export class AzureRMTools {
             }
 
             // Load parameter file asynchronously and expose its parameter values
-            public async getValuesSource(): Promise<IParameterValuesSource> { //asdf
+            public async getValuesSource(): Promise<IParameterValuesSource> {
                 return this._parameterValuesSource.getOrCachePromise(async () => {
-                    const dp = await this.parent.getOrReadParametersFile(this.parameterFileUri); //asdf use similar code
+                    const dp = await this.parent.getOrReadParametersFile(this.parameterFileUri);
                     return dp?.parameterValuesSource;
                 });
             }
@@ -1422,7 +1417,8 @@ export class AzureRMTools {
             return doc;
         }
 
-        // Nope, have to read it from disk //asdf
+        // Nope, have to read it from disk
+        // CONSIDER: Load it instead?
         const contents = await readUtf8FileWithBom(uri.fsPath);
         return new DeploymentParametersDoc(contents, uri);
     }
@@ -1649,13 +1645,8 @@ export class AzureRMTools {
             actionContext.errorHandling.rethrow = true;
 
             const dt = this.getOpenedDeploymentTemplate(textDocument);
-            //const cancel = new Cancellation(token, actionContext);
-            //asdf            const pc: PositionContext | undefined = await this.getPositionContext(textDocument, position, cancel);
-            // if (!token.isCancellationRequested && pc) {
-            // }
-
             if (dt) {
-                return dt.getDocumentLinks(undefined/*asdf*/, actionContext);
+                return dt.getDocumentLinks(actionContext);
             }
 
             return undefined;
@@ -1664,7 +1655,7 @@ export class AzureRMTools {
 
     private async resolveDocumentLink(link: vscode.DocumentLink, token: vscode.CancellationToken): Promise<vscode.DocumentLink | undefined> {
         return await callWithTelemetryAndErrorHandling('provideDocumentLinks', async (actionContext) => {
-            actionContext.telemetry.suppressIfSuccessful = true; //asdf?
+            actionContext.telemetry.suppressIfSuccessful = true;
 
             // tslint:disable-next-line: no-any
             const extra = <{ scope?: LinkedTemplateScope; fallbackTarget?: vscode.Uri }><any>link;
@@ -1741,26 +1732,37 @@ export class AzureRMTools {
         });
     }
 
-    private _e: NormalizedMap<vscode.Uri, INotifyTemplateGraphArgs> //asdf
-        = new NormalizedMap<vscode.Uri, INotifyTemplateGraphArgs>(
-            getNormalizedDocumentKey
-        ); //asdf
+    /**
+     * This event is fired when validation on a template finishes, and informs us of the the
+     * linked templates referenced by that template
+     */
+    private onTemplateGraphAvailable(e: INotifyTemplateGraphArgs & ITelemetryContext): void {
 
-    // asdf move this to the document itself
-    private onTemplateGraphAvailable(e: INotifyTemplateGraphArgs & ITelemetryContext): void { //asdf why so many calls?
-        //console.log("============================== graph:\n" + JSON.stringify(e, null, 2));
         const rootTemplateUri = vscode.Uri.parse(e.rootTemplateUri);
-        this._e.set(vscode.Uri.parse/*asdf*/(e.rootTemplateUri, true), e); //asdf
-        const dt = this.getOpenedDeploymentTemplate(rootTemplateUri);
+        const rootTemplate = this.getOpenedDeploymentTemplate(rootTemplateUri);
 
-        if (dt) {
-            for (const doc of vscode.workspace.textDocuments) {//asdf extract
-                const rootTemplateKey = getNormalizedDocumentKey(vscode.Uri.parse(e.rootTemplateUri, true));
-                if (getNormalizedDocumentKey(doc.uri) === rootTemplateKey) {
-                    // tslint:disable-next-line: no-floating-promises // Don't wait
-                    this.reportDeploymentTemplateErrorsInBackground(doc, dt);
+        if (rootTemplate) {
+            const loadedTemplatesMap: NormalizedMap<vscode.Uri, DeploymentTemplateDoc> = new NormalizedMap<vscode.Uri, DeploymentTemplateDoc>(
+                getNormalizedDocumentKey
+            );
+            for (const entry of this._deploymentDocuments) {
+                if (entry[1] instanceof DeploymentTemplateDoc) {
+                    loadedTemplatesMap.set(entry[1].documentUri, entry[1]);
                 }
             }
+
+            for (const doc of vscode.workspace.textDocuments) {
+                const rootTemplateKey = getNormalizedDocumentKey(vscode.Uri.parse(e.rootTemplateUri, true));
+                if (getNormalizedDocumentKey(doc.uri) === rootTemplateKey) {
+                    assignTemplateGraphToDeploymentTemplate(e, rootTemplate, loadedTemplatesMap);
+
+                    // Re-validate
+                    // tslint:disable-next-line: no-floating-promises // Don't wait
+                    this.reportDeploymentTemplateErrorsInBackground(doc, rootTemplate);
+                }
+            }
+
+            // Cause code lenses to be re-calculated
             this._codeLensChangedEmitter.fire();
         }
     }
@@ -1769,26 +1771,4 @@ export class AzureRMTools {
         this._codeLensChangedEmitter.fire();
     }
 
-    private setUpTemplate(dt: DeploymentTemplateDoc): void {
-        const e = this._e.get(dt.documentUri);
-        if (e) {//asdf
-            // // asdf do we need to check document version?
-            // // asdf see if it changed first
-            // const rootTemplateUri = vscode.Uri.parse(e.rootTemplateUri, true);
-            // // tslint:disable-next-line: no-console
-            // console.log(`Template graph available for ${rootTemplateUri}`); //asdf
-            // const dt = this.getOpenedDeploymentTemplate(rootTemplateUri);
-            // if (dt) {
-            const loadedTemplatesMap: NormalizedMap<vscode.Uri, DeploymentTemplateDoc> = new NormalizedMap<vscode.Uri, DeploymentTemplateDoc>(
-                getNormalizedDocumentKey
-            ); //asdf
-            for (const entry of this._deploymentDocuments) {
-                if (entry[1] instanceof DeploymentTemplateDoc) {
-                    loadedTemplatesMap.set(entry[1].documentUri, entry[1]);
-                }
-            }
-
-            assignTemplateGraphToDeploymentTemplate(e, dt, loadedTemplatesMap);
-        }
-    }
 }

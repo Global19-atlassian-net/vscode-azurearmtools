@@ -6,7 +6,6 @@
 
 import { Uri } from "vscode";
 import { deploymentsResourceTypeLC, templateKeys } from "../../../constants";
-import { ILinkedTemplateReference } from "../../../ILinkedTemplateReference";
 import * as Json from "../../../language/json/JSON";
 import { assertNever } from "../../../util/assertNever";
 import { NormalizedMap } from "../../../util/NormalizedMap";
@@ -20,6 +19,7 @@ import { DeploymentTemplateDoc } from "../DeploymentTemplateDoc";
 import { IJsonDocument } from "../IJsonDocument";
 import { IResource } from "../IResource";
 import { getParameterDefinitionsFromLinkedTemplate } from "../linkedTemplates/getParameterDefinitionsFromLinkedTemplate";
+import { ILinkedTemplateReference } from "../linkedTemplates/ILinkedTemplateReference";
 import { Resource } from "../Resource";
 import { UserFunctionNamespaceDefinition } from "../UserFunctionNamespaceDefinition";
 import { IVariableDefinition, TopLevelCopyBlockVariableDefinition, TopLevelVariableDefinition } from "../VariableDefinition";
@@ -356,7 +356,10 @@ export class NestedTemplateOuterScope extends TemplateScope /*asdf implements IC
 
 export class LinkedTemplateScope extends TemplateScope implements IChildDeploymentScope {
     private _parameterValuesSource: ParameterValuesSourceFromJsonObject;
-    //asfdasdf private _parameterDefinitionsSource: ParameterDefinitionsSource | undefined;
+
+    // This is detected after the tree is created, so is set when available.
+    private _linkedFileReferences: ILinkedTemplateReference[] | undefined;
+    private _linkedFileParameterDefinitionsSource: SimpleParameterDefinitionsSource = new SimpleParameterDefinitionsSource();
 
     public constructor(
         parentScope: TemplateScope,
@@ -385,6 +388,13 @@ export class LinkedTemplateScope extends TemplateScope implements IChildDeployme
         );
     }
 
+    /**
+     * Linked files referenced by this scope (may change as new information is obtained)
+     */
+    public get linkedFileReferences(): ILinkedTemplateReference[] | undefined {
+        return this._linkedFileReferences;
+    }
+
     public get isRelativePath(): boolean {
         return !!(
             this.templateLinkObject?.hasProperty(templateKeys.linkedDeploymentTemplateLinkRelativePath)
@@ -392,33 +402,27 @@ export class LinkedTemplateScope extends TemplateScope implements IChildDeployme
         );
     }
 
-    // This is detected after the tree is created, so is set when available.
-    public get linkedFileReferences(): ILinkedTemplateReference[] | undefined { return this._linkedFileReferences; }
-    private _linkedFileReferences: ILinkedTemplateReference[] | undefined;
-    //private _linkedFileParameterDefinitions: IParameterDefinition[] | undefined; //asdfsadf
-    private _linkedFileParameterDefinitionsSource: SimpleParameterDefinitionsSource = new SimpleParameterDefinitionsSource();
-    public setLinkedFileReferences(
+    public assignLinkedFileReferences(
         linkedFileReferences: ILinkedTemplateReference[] | undefined,
         allLoadedTemplates: NormalizedMap<Uri, DeploymentTemplateDoc>
     ): void {
-        //asdf cache?
-
-        this._linkedFileReferences = undefined;
-        this.clearCaches();
+        this._linkedFileReferences = linkedFileReferences;
+        this._linkedFileParameterDefinitionsSource.setParameterDefinitions([]);
 
         if (linkedFileReferences && linkedFileReferences.length > 0) {
-            this._linkedFileParameterDefinitionsSource.setParameterDefinitions(getParameterDefinitionsFromLinkedTemplate(linkedFileReferences[0/*asdf*/], allLoadedTemplates)); //asdf move to caller
+            // Ignore all but the first reference for the same scope (as happens when the the deployment
+            // resources is inside a COPY loop)
+            const firstLinkedFileReference = linkedFileReferences[0];
+            const parameterDefinitions: IParameterDefinition[] =
+                getParameterDefinitionsFromLinkedTemplate(
+                    firstLinkedFileReference,
+                    allLoadedTemplates);
+            this._linkedFileParameterDefinitionsSource.setParameterDefinitions(parameterDefinitions);
         }
-
-        this._linkedFileReferences = linkedFileReferences;
-        return undefined;
     }
 
     public readonly scopeKind: TemplateScopeKind = TemplateScopeKind.LinkedDeployment;
 
-    //asdf
-    // A linked template scope asdf:
-    //   "templateLink": expressions
     /*
         Technically, a linked template deployment does create a new scope, but it's not defined inside the main template but rather in the external
         linked template.  The parameters defined inside the linked template are exposed here for use with validation and intellisense

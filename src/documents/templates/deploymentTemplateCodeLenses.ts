@@ -8,7 +8,6 @@ import * as path from "path";
 import { Range, Uri } from 'vscode';
 import { parseError } from 'vscode-azureextensionui';
 import { ext } from '../../extensionVariables';
-import { ILinkedTemplateReference, LinkedFileLoadState } from "../../ILinkedTemplateReference";
 import { Span } from '../../language/Span';
 import { LanguageServerState } from '../../languageclient/startArmLanguageServer';
 import { assertNever } from '../../util/assertNever';
@@ -20,6 +19,8 @@ import { IParameterDefinition } from '../parameters/IParameterDefinition';
 import { IParameterValuesSource } from '../parameters/IParameterValuesSource';
 import { IParameterValuesSourceProvider } from '../parameters/IParameterValuesSourceProvider';
 import { getRelativeParameterFilePath } from "../parameters/parameterFilePaths";
+import { ILinkedTemplateReference } from "./linkedTemplates/ILinkedTemplateReference";
+import { LinkedFileLoadState } from "./linkedTemplates/LinkedFileLoadState";
 import { TemplateScope, TemplateScopeKind } from './scopes/TemplateScope';
 import { LinkedTemplateScope, TopLevelTemplateScope } from './scopes/templateScopes';
 
@@ -252,7 +253,7 @@ export class LinkedTemplateCodeLens extends ResolvableCodeLens {
             title = "Relative linked template";
             if (!hasParameterFile) {
                 title += " " + "(validation disabled)";
-            } else {
+            } else if (firstLinkedTemplateRef) {
                 title += " " + "(validation enabled)";
             }
         } else {

@@ -13,7 +13,7 @@ import { IJsonDocument } from "../templates/IJsonDocument";
  */
 export interface IParameterDefinition extends INamedDefinition {
     // tslint:disable-next-line: no-suspicious-comment
-    document: IJsonDocument; // TODO: move to parent
+    document: IJsonDocument; // CONSIDER: move to parent (INamedDefinition)
 
     nameValue: Json.StringValue;
 

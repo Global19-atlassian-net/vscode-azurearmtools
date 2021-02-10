@@ -99,6 +99,12 @@ export class DeploymentTemplateDoc extends DeploymentDocument {
         super(documentText, documentUri);
     }
 
+    /**
+     * Information about the linked templates referenced by this template, as obtained from the language server.
+     * This information must be filled in as it is obtained (may not be available when creating the template document).
+     */
+    //asdf public templateGraph: INotifyTemplateGraphArgs | undefined;
+
     public get topLevelScope(): TemplateScope {
         return this._topLevelScope.getOrCacheValue(() =>
             new TopLevelTemplateScope(
@@ -786,7 +792,7 @@ export class DeploymentTemplateDoc extends DeploymentDocument {
     }
 
     //asdf
-    public getDocumentLinks(associatedDocument: DeploymentDocument | undefined, context: IActionContext): DocumentLink[] {
+    public getDocumentLinks(context: IActionContext): DocumentLink[] {
         const links: DocumentLink[] = [];
 
         for (const scope of ofType(this.allScopes, LinkedTemplateScope)) {
