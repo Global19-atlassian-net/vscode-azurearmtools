@@ -514,7 +514,7 @@ export class DeploymentTemplateDoc extends DeploymentDocument {
         }
     }
 
-    public getCodeActions(//asdf recalculate
+    public getCodeActions(
         _associatedDocument: DeploymentDocument | undefined,
         range: Range | Selection,
         context: CodeActionContext

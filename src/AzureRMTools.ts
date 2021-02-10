@@ -33,6 +33,7 @@ import { mightBeDeploymentParameters, mightBeDeploymentTemplate, setLangIdToArm,
 import { TemplateSectionType } from "./documents/templates/TemplateSectionType";
 import { ext } from "./extensionVariables";
 import { assert } from './fixed_assert';
+import { IProvideOpenedDocuments } from './IProvideOpenedDocuments';
 import * as TLE from "./language/expressions/TLE";
 import { Issue } from "./language/Issue";
 import * as Json from "./language/json/JSON";
@@ -129,7 +130,7 @@ export function deactivateInternal(): void {
     // Nothing to do
 }
 
-export class AzureRMTools {
+export class AzureRMTools implements IProvideOpenedDocuments {
     private readonly _diagnosticsCollection: vscode.DiagnosticCollection;
     private readonly _deploymentDocuments: Map<string, DeploymentDocument> = new Map<string, DeploymentDocument>();
     private readonly _filesAskedToUpdateSchemaThisSession: Set<string> = new Set<string>();
@@ -423,7 +424,7 @@ export class AzureRMTools {
         return this._deploymentDocuments.get(documentPathKey);
     }
 
-    private getOpenedDeploymentTemplate(documentOrUri: vscode.TextDocument | vscode.Uri): DeploymentTemplateDoc | undefined {
+    public getOpenedDeploymentTemplate(documentOrUri: vscode.TextDocument | vscode.Uri): DeploymentTemplateDoc | undefined {
         const file = this.getOpenedDeploymentDocument(documentOrUri);
         return file instanceof DeploymentTemplateDoc ? file : undefined;
     }
