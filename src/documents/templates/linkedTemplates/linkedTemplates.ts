@@ -49,7 +49,9 @@ export interface INotifyTemplateGraphArgs {
     isComplete: boolean; // If there were validation errors, the graph might not be complete
 }
 
-type OpenLinkedFileResult = { document: TextDocument; loadError?: Errorish } | { document?: TextDocument; loadError: Errorish }; //asdf
+type OpenLinkedFileResult =
+    { document: TextDocument; loadError?: Errorish }
+    | { document?: TextDocument; loadError: Errorish };
 
 class LinkedTemplatePathNotFoundError extends Error { //asdf how does this look in telemetry?
     public constructor(message: string) {
@@ -69,7 +71,7 @@ export async function onRequestOpenLinkedFile(
         pathType
     }: IRequestOpenLinkedFileArgs
 ): Promise<IRequestOpenLinkedFileResult | undefined> {
-    return await callWithTelemetryAndErrorHandling<IRequestOpenLinkedFileResult>('onRequestOpenLinkedFile', async (context: IActionContext) => { //asdf error handling
+    return await callWithTelemetryAndErrorHandling<IRequestOpenLinkedFileResult>('onRequestOpenLinkedFile', async (context: IActionContext) => {
         const properties = <TelemetryProperties & {
             openResult: 'Loaded' | 'Error';
             openErrorType: string;

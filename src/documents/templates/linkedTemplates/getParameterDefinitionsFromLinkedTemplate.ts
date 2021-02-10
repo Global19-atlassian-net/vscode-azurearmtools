@@ -12,7 +12,7 @@ export function getParameterDefinitionsFromLinkedTemplate(
     linkedTemplate: ILinkedTemplateReference,
     provideOpenDocuments: IProvideOpenedDocuments
 ): IParameterDefinition[] {
-    const dt = provideOpenDocuments.getOpenedDeploymentTemplate(Uri.parse(linkedTemplate.fullUri, true)); //asdf
+    const dt = provideOpenDocuments.getOpenedDeploymentTemplate(Uri.parse(linkedTemplate.fullUri, true));
     return dt?.topLevelScope.parameterDefinitionsSource.parameterDefinitions.slice() // clone
         ?? [];
 }

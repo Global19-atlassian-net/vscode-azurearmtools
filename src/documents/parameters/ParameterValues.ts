@@ -87,7 +87,7 @@ function isParameterRequired(paramDef: IParameterDefinition): boolean {
 }
 
 export function getMissingParameters(
-    parameterDefinitionsSource: IParameterDefinitionsSource | undefined/*asdf*/,
+    parameterDefinitionsSource: IParameterDefinitionsSource,
     parameterValuesSource: IParameterValuesSource,
     onlyRequiredParameters: boolean
 ): IParameterDefinition[] {
@@ -413,7 +413,7 @@ export function canAddPropertyValueHere(
     return true;
 }
 
-export function getMissingParameterErrors(parameterValues: IParameterValuesSource, parameterDefinitions: IParameterDefinitionsSource | undefined/*asdf*/): Issue[] {
+export function getMissingParameterErrors(parameterValues: IParameterValuesSource, parameterDefinitions: IParameterDefinitionsSource): Issue[] {
     const missingRequiredParams: IParameterDefinition[] = getMissingParameters(
         parameterDefinitions,
         parameterValues,

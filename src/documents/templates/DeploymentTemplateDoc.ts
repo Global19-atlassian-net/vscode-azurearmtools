@@ -682,7 +682,7 @@ export class DeploymentTemplateDoc extends DeploymentDocument {
                 if (scope instanceof TopLevelTemplateScope) {
                     paramValuesSourceProvider = topLevelParameterValuesProvider;
                 } else {
-                    // For anything other than the top level, we already have the parameter values source, no need to resolve lazily //asdf?
+                    // For anything other than the top level, we already have the parameter values source, no need to resolve lazily
                     const parameterValuesSource = scope.parameterValuesSource;
                     paramValuesSourceProvider = parameterValuesSource ? new SynchronousParameterValuesSourceProvider(parameterValuesSource) : undefined;
                 }
@@ -749,7 +749,7 @@ export class DeploymentTemplateDoc extends DeploymentDocument {
     ): ResolvableCodeLens[] {
         const lenses: ResolvableCodeLens[] = [];
         for (let scope of this.allScopes) {
-            const owningDeploymentResource = (<Partial<IChildDeploymentScope>>scope).owningDeploymentResource; //asdf
+            const owningDeploymentResource = (<Partial<IChildDeploymentScope>>scope).owningDeploymentResource;
             if (scope.rootObject || owningDeploymentResource) {
                 switch (scope.scopeKind) {
                     case TemplateScopeKind.NestedDeploymentWithInnerScope:

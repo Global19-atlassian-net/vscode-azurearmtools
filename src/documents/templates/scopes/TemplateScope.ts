@@ -59,10 +59,6 @@ export abstract class TemplateScope implements IParameterDefinitionsSourceProvid
     ) {
     }
 
-    // public get isDeployment(): boolean { asdfs
-    //     return !!this.deploymentSchema;
-    // }
-
     public readonly abstract scopeKind: TemplateScopeKind;
 
     // CONSIDER: Better design. Split out resources from params/vars/functions, or separate
@@ -140,12 +136,8 @@ export abstract class TemplateScope implements IParameterDefinitionsSourceProvid
     }
 
     public get parameterDefinitionsSource(): IParameterDefinitionsSource {
-        return this.getParameterDefinitionsSource(); //asdf caching issues?
+        return this.getParameterDefinitionsSource();
     }
-
-    // public clearCaches(): void {//asdf remove
-    //     // this._parameterDefinitions.clear(); //asdf others? //asdfasdf?
-    // }
 
     public get childScopes(): TemplateScope[] {
         const scopes: TemplateScope[] = [];

@@ -635,7 +635,6 @@ function compareDiagnostics(actual: Diagnostic[], expected: ExpectedDiagnostics,
 function transformResults(results: Diagnostic[], options: ICompareDiagnosticsOptions): void {
     if (options.transformResults) {
         for (const result of results) {
-            //asdf? result.originalMessage = result.message;
             result.message = options.transformResults(result.message);
         }
     }

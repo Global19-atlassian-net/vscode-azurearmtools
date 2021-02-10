@@ -70,7 +70,11 @@ suite("Add missing parameters for nested/linked templates", () => {
                 const allLoadedTemplates = new NormalizedMap<Uri, DeploymentTemplateDoc>(getNormalizedDocumentKey);
                 allLoadedTemplates.set(templateUri, dt);
                 allLoadedTemplates.set(childUri, childDt);
-                assignTemplateGraphToDeploymentTemplate(graph, dt, allLoadedTemplates);
+                assignTemplateGraphToDeploymentTemplate(graph, dt, {
+                    getOpenedDeploymentTemplate: (uri: Uri): DeploymentTemplateDoc | undefined => {
+                        return allLoadedTemplates.get(uri);
+                    }
+                });
             }
 
             // Get valid code actions at the <!bang!> marker

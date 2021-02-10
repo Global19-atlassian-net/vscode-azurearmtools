@@ -85,10 +85,8 @@ suite("Linked templates functional tests", () => {
         testCase: string,
         testDescription: string,
         options: {
-            //asdf group into single object for mainTemplate
-            //mainTemplateContents?: Partial<IDeploymentTemplate>;
+            //CONSIDER: group into single object for mainTemplate
             mainTemplateFile: string;
-            //mainParametersContents?: string;
             mainParametersFile: string;
             mainTemplateExpected: ExpectedDiagnostics;
             // tslint:disable-next-line: no-suspicious-comment

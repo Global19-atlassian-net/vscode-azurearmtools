@@ -27,12 +27,13 @@ import { getDeploymentScopeReference } from "./getDeploymentScopeReference";
 import { IDeploymentSchemaReference } from "./IDeploymentSchemaReference";
 import { TemplateScope, TemplateScopeKind } from "./TemplateScope";
 
-export interface IChildDeploymentScope { //asdf doc
+export interface IChildDeploymentScope {
     /**
      * The resource which is a deployments resource and defines this child deployment
      */
     owningDeploymentResource: IResource;
 }
+
 export class EmptyScope extends TemplateScope {
     public scopeKind: TemplateScopeKind = TemplateScopeKind.Empty;
 
@@ -95,7 +96,7 @@ abstract class TemplateScopeFromObject extends TemplateScope {
     }
 
     protected getVariableDefinitions(): IVariableDefinition[] | undefined {
-        return getVariableDefinitionsFromObject(this._templateRootObject); //asdf add doc to vars too?
+        return getVariableDefinitionsFromObject(this._templateRootObject);
     }
 
     protected getNamespaceDefinitions(): UserFunctionNamespaceDefinition[] | undefined {
@@ -262,7 +263,7 @@ export enum ExpressionScopeKind {
  *
  * See https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/linked-templates#expression-evaluation-scope-in-nested-templates
  */
-export class NestedTemplateInnerScope extends TemplateScopeFromObject /*asdf implements IChildDeploymentScope*/ {
+export class NestedTemplateInnerScope extends TemplateScopeFromObject {
     private _parameterValuesSource: ParameterValuesSourceFromJsonObject;
 
     public constructor(
@@ -308,7 +309,7 @@ export class NestedTemplateInnerScope extends TemplateScopeFromObject /*asdf imp
  *
  * See https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/linked-templates#expression-evaluation-scope-in-nested-templates
  */
-export class NestedTemplateOuterScope extends TemplateScope /*asdf implements IChildDeploymentScope*/ {
+export class NestedTemplateOuterScope extends TemplateScope {
     public constructor(
         private readonly parentScope: TemplateScope,
         // The value of the "template" property containing the nested template itself
@@ -377,7 +378,7 @@ export class LinkedTemplateScope extends TemplateScope implements IChildDeployme
             // The vars/params/funcs defined for the linked template doesn't actually apply to evaluation of any expressions inside
             //   this template (they would only apply inside the linked template file itself), so the root object is always undefined.
             undefined,
-            undefined,  //getDeploymentScopeReferenceFromRootObject(templateLinkObject), //asdf? need to get this from linked template
+            undefined,
             __debugDisplay
         );
 
@@ -452,12 +453,7 @@ export class LinkedTemplateScope extends TemplateScope implements IChildDeployme
         }
     */
 
-    // Shares its members with its parent (i.e., if the expressions inside the
-    // templateLink object reference parameters and variables, those are referring to
-    // the parent's parameters/variables - a linked template does create a new scope, but
-    // only inside the template contents themselves, not the templateLink object)
-    //public readonly hasUniqueParamsVarsAndFunctions: boolean = false; //asdf
-    public readonly hasUniqueParamsVarsAndFunctions: boolean = true; //asdf
+    public readonly hasUniqueParamsVarsAndFunctions: boolean = true;
 
     public readonly isExternal: boolean = true;
 

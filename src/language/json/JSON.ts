@@ -1111,7 +1111,7 @@ export class ParseResult {
      * Get the character index from the stream's perspective from the provided
      * line and column indexes.
      */
-    public getCharacterIndex(lineIndex: number, columnIndex: number, options?: { allowOutOfBounds?: boolean }/*asdf test*/): number {
+    public getCharacterIndex(lineIndex: number, columnIndex: number, options?: { allowOutOfBounds?: boolean }/*asdf test?*/): number {
         assert(0 <= lineIndex, `Cannot get a character index for a negative line index (${lineIndex}).`);
         if (lineIndex >= this.lineLengths.length) {
             if (options?.allowOutOfBounds) {
