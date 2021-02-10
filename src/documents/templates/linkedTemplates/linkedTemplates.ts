@@ -3,7 +3,7 @@
 // ----------------------------------------------------------------------------
 
 import * as path from 'path';
-import { TextDocument, Uri, window, workspace } from "vscode";
+import { commands, DocumentLink, TextDocument, Uri, workspace } from "vscode";
 import { callWithTelemetryAndErrorHandling, IActionContext, parseError, TelemetryProperties } from "vscode-azureextensionui";
 import { armTemplateLanguageId } from '../../../constants';
 import { Errorish } from '../../../Errorish';
@@ -173,6 +173,8 @@ export function assignTemplateGraphToDeploymentTemplate(
 }
 
 export async function openLinkedTemplateFile(linkedTemplateUri: Uri): Promise<void> {
-    let doc: TextDocument = await workspace.openTextDocument(linkedTemplateUri); //asdf
-    await window.showTextDocument(doc);
+    const args = <DocumentLink>{
+        target: linkedTemplateUri
+    };
+    await commands.executeCommand("editor.action.openLink", args);
 }
