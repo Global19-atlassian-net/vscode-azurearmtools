@@ -754,8 +754,8 @@ export class DeploymentTemplateDoc extends DeploymentDocument {
                 switch (scope.scopeKind) {
                     case TemplateScopeKind.NestedDeploymentWithInnerScope:
                     case TemplateScopeKind.NestedDeploymentWithOuterScope:
-                        if (scope.rootObject) { //asdf
-                            const lens = NestedTemplateCodeLen.create(scope, scope.rootObject.span); //asdf have code lens figure out its scope
+                        if (scope.rootObject) {
+                            const lens = NestedTemplateCodeLen.create(scope, scope.rootObject.span);
                             if (lens) {
                                 lenses.push(lens);
                             }
@@ -770,7 +770,7 @@ export class DeploymentTemplateDoc extends DeploymentDocument {
                             lenses.push(...
                                 LinkedTemplateCodeLens.create(
                                     scope,
-                                    span, //asdf?  //asdf have code lens figure out its scope
+                                    span,
                                     scope.linkedFileReferences,
                                     topLevelParameterValuesProvider)
                             );

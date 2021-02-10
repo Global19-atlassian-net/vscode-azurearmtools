@@ -54,7 +54,6 @@ class ExtensionVariables {
         return this._outputChannel.value;
     }
 
-    //asdf simplify these?
     public set ui(ui: IAzureUserInput) {
         this._ui.value = ui;
     }

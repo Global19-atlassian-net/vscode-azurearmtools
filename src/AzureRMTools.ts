@@ -1740,7 +1740,6 @@ export class AzureRMTools implements IProvideOpenedDocuments {
      * linked templates referenced by that template
      */
     private onTemplateGraphAvailable(e: INotifyTemplateGraphArgs & ITelemetryContext): void {
-        //asdf remove line
         const rootTemplateUri = vscode.Uri.parse(e.rootTemplateUri);
         const rootTemplate = this.getOpenedDeploymentTemplate(rootTemplateUri);
 
