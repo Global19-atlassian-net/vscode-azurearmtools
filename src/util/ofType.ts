@@ -9,4 +9,3 @@ type Constructor<T> = new (...args: any[]) => T;
 export function ofType<TElements, TFilter extends TElements>(array: TElements[], filterType: Constructor<TFilter>): TFilter[] {
     return <TFilter[]>array.filter(e => e instanceof filterType);
 }
-

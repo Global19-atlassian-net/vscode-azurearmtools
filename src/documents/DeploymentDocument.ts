@@ -188,7 +188,6 @@ export abstract class DeploymentDocument implements IJsonDocument {
         parameterValuesSourceProvider: IParameterValuesSourceProvider | undefined
     ): ResolvableCodeLens[];
 
-    //asdf
     // CONSIDER: Should we cache?  But that cache would depend on associatedTemplate not changing, not sure if that's
     // guaranteed.
     // Consider whether associated document should be a function passed in to constructor so that it's a permanent part of the
