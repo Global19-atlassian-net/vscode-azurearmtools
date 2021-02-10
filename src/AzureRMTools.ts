@@ -1755,7 +1755,7 @@ export class AzureRMTools implements IProvideOpenedDocuments {
             for (const doc of vscode.workspace.textDocuments) {
                 const rootTemplateKey = getNormalizedDocumentKey(vscode.Uri.parse(e.rootTemplateUri, true));
                 if (getNormalizedDocumentKey(doc.uri) === rootTemplateKey) {
-                    assignTemplateGraphToDeploymentTemplate(e, rootTemplate, loadedTemplatesMap);
+                    assignTemplateGraphToDeploymentTemplate(e, rootTemplate, this);
 
                     // Re-validate
                     // tslint:disable-next-line: no-floating-promises // Don't wait

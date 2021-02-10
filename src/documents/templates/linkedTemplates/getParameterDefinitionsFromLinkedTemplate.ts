@@ -4,16 +4,15 @@
 // ---------------------------------------------------------------------------------------------
 
 import { Uri } from "vscode";
-import { NormalizedMap } from "../../../util/NormalizedMap";
+import { IProvideOpenedDocuments } from "../../../IProvideOpenedDocuments";
 import { IParameterDefinition } from "../../parameters/IParameterDefinition";
-import { DeploymentTemplateDoc } from "../DeploymentTemplateDoc";
 import { ILinkedTemplateReference } from "./ILinkedTemplateReference";
 
 export function getParameterDefinitionsFromLinkedTemplate(
     linkedTemplate: ILinkedTemplateReference,
-    allLoadedTemplates: NormalizedMap<Uri, DeploymentTemplateDoc> //asdf provider interface
+    provideOpenDocuments: IProvideOpenedDocuments
 ): IParameterDefinition[] {
-    const dt = allLoadedTemplates.get(Uri.parse(linkedTemplate.fullUri, true)); //asdf
+    const dt = provideOpenDocuments.getOpenedDeploymentTemplate(Uri.parse(linkedTemplate.fullUri, true)); //asdf
     return dt?.topLevelScope.parameterDefinitionsSource.parameterDefinitions.slice() // clone
         ?? [];
 }

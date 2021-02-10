@@ -9,8 +9,8 @@ import { armTemplateLanguageId } from '../../../constants';
 import { Errorish } from '../../../Errorish';
 import { ext } from "../../../extensionVariables";
 import { assert } from '../../../fixed_assert';
+import { IProvideOpenedDocuments } from '../../../IProvideOpenedDocuments';
 import { ContainsBehavior } from "../../../language/Span";
-import { NormalizedMap } from '../../../util/NormalizedMap';
 import { normalizePath } from '../../../util/normalizePath';
 import { ofType } from '../../../util/ofType';
 import { pathExists } from '../../../util/pathExists';
@@ -49,77 +49,7 @@ export interface INotifyTemplateGraphArgs {
     isComplete: boolean; // If there were validation errors, the graph might not be complete
 }
 
-/**
- * Handles a request from the language server to open a linked template
- * @param sourceTemplateUri The full URI of the template which contains the link
- * @param requestedLinkPath The full URI of the resolved link being requested
- */
-export async function onRequestOpenLinkedFile({ sourceTemplateUri, requestedLinkResolvedUri, pathType }: IRequestOpenLinkedFileArgs): Promise<IRequestOpenLinkedFileResult | undefined> {
-    return await callWithTelemetryAndErrorHandling<IRequestOpenLinkedFileResult>('onRequestOpenLinkedFile', async (context: IActionContext) => { //asdf error handling
-        // const properties = <TelemetryProperties & { //asdf
-        //     openResult: 'Loaded' | 'Error';
-        //     openErrorType: string;
-        // }>context.telemetry.properties;
-        // properties.openErrorType = '';
-        // properties.openResult = 'Error';
-
-        const result = await tryOpenLinkedFile(requestedLinkResolvedUri, pathType);
-        return { loadErrorMessage: result.loadError ? parseError(result.loadError).message : undefined };
-
-        //asdf
-        // if (result.document) {
-        //     properties.openResult = 'Loaded';
-        // } else {
-        //     const parsedError = parseError(loadError);
-        //     properties.openErrorType = parsedError.errorType;
-        //     return {
-        //         loadErrorMessage: parsedError.message
-        //     };
-        // }
-
-        // return {
-        //     loadErrorMessage: undefined
-        // };
-    });
-}
-
 type OpenLinkedFileResult = { document: TextDocument; loadError?: Errorish } | { document?: TextDocument; loadError: Errorish }; //asdf
-
-export async function tryOpenLinkedFile(
-    //asdf  sourceTemplateUriAsString: string,
-    requestedLinkResolvedUriAsString: string,
-    pathType: PathType
-): Promise<OpenLinkedFileResult> {
-    return <OpenLinkedFileResult>await callWithTelemetryAndErrorHandling<OpenLinkedFileResult>('tryOpenLinkedFile'/*asdf*/, async (context: IActionContext) => { //asdf error handling
-        //context.telemetry.suppressIfSuccessful = true; //asdf?
-
-        const properties = <TelemetryProperties & {
-            openResult: 'Loaded' | 'Error';
-            openErrorType: string;
-        }>context.telemetry.properties;
-        properties.openErrorType = '';
-        properties.openResult = 'Error';
-
-        //asdf const sourceTemplatePathParsed: Uri = Uri.parse(sourceTemplateUriAsString, true);
-        const requestedLinkResolvedPathParsed: Uri = Uri.parse(requestedLinkResolvedUriAsString, true);
-
-        //asdf assert(path.isAbsolute(sourceTemplatePathParsed.fsPath), "Internal error: sourceTemplateUri should be an absolute path");
-        assert(path.isAbsolute(requestedLinkResolvedPathParsed.fsPath), "Internal error: requestedLinkUri should be an absolute path");
-
-        // Strip the path of any query string, and use only the local file path
-        const localPath = requestedLinkResolvedPathParsed.fsPath;
-
-        const result = await tryOpenLinkedFile2asdf(localPath, pathType, context);
-        if (result.document) {
-            properties.openResult = 'Loaded';
-        } else {
-            const parsedError = parseError(result.loadError);
-            properties.openErrorType = parsedError.errorType;
-        }
-
-        return result;
-    });
-}
 
 class LinkedTemplatePathNotFoundError extends Error { //asdf how does this look in telemetry?
     public constructor(message: string) {
@@ -128,11 +58,51 @@ class LinkedTemplatePathNotFoundError extends Error { //asdf how does this look 
 }
 
 /**
+ * Handles a request from the language server to open a linked template
+ * @param sourceTemplateUri The full URI of the template which contains the link
+ * @param requestedLinkPath The full URI of the resolved link being requested
+ */
+export async function onRequestOpenLinkedFile(
+    {
+        sourceTemplateUri,
+        requestedLinkResolvedUri,
+        pathType
+    }: IRequestOpenLinkedFileArgs
+): Promise<IRequestOpenLinkedFileResult | undefined> {
+    return await callWithTelemetryAndErrorHandling<IRequestOpenLinkedFileResult>('onRequestOpenLinkedFile', async (context: IActionContext) => { //asdf error handling
+        const properties = <TelemetryProperties & {
+            openResult: 'Loaded' | 'Error';
+            openErrorType: string;
+        }>context.telemetry.properties;
+        properties.openErrorType = '';
+        properties.openResult = 'Error';
+
+        const requestedLinkResolvedPathParsed: Uri = Uri.parse(requestedLinkResolvedUri, true);
+
+        assert(path.isAbsolute(requestedLinkResolvedPathParsed.fsPath), "Internal error: requestedLinkUri should be an absolute path");
+
+        // Strip the path of any query string, and use only the local file path
+        const localPath = requestedLinkResolvedPathParsed.fsPath;
+
+        const result = await tryOpenLinkedFile(localPath, pathType, context);
+        if (result.document) {
+            properties.openResult = 'Loaded';
+        } else {
+            const parsedError = parseError(result.loadError);
+            properties.openErrorType = parsedError.errorType;
+        }
+
+        const loadErrorMessage = result.loadError ? parseError(result.loadError).message : undefined;
+        return { loadErrorMessage };
+    });
+}
+
+/**
  * Attempts to load the given file into a text document in VS Code so that
  * it will get sent to the language server.
  * <remarks>This function should not throw
  */
-async function tryOpenLinkedFile2asdf(
+async function tryOpenLinkedFile(
     localPath: string,
     pathType: PathType,
     context: IActionContext
@@ -157,14 +127,13 @@ async function tryOpenLinkedFile2asdf(
             ext.outputChannel.appendLine(`... Setting langid to ${armTemplateLanguageId}`);
             context.telemetry.properties.isLinkedTemplate = 'true';
             setLangIdToArm(document, context);
-            //do we try to wait?
         }
 
         // No errors
         return { document };
     } catch (err) {
         ext.outputChannel.appendLine(`... Failed loading ${localPath}: ${parseError(err).message}`);
-        return { loadError: <Errorish>err }; //asdf what UI experience? put in error list?  asdf wrap error?
+        return { loadError: <Errorish>err };
     }
 }
 
@@ -175,7 +144,7 @@ async function tryOpenLinkedFile2asdf(
 export function assignTemplateGraphToDeploymentTemplate(
     graph: INotifyTemplateGraphArgs,
     dt: DeploymentTemplateDoc,
-    allLoadedTemplates: NormalizedMap<Uri, DeploymentTemplateDoc> //asdf better to pass a function to get a loaded template?
+    provideOpenDocuments: IProvideOpenedDocuments
 ): void { //asdf this is called a lot of times
     assert(normalizePath(Uri.parse(graph.rootTemplateUri)) === normalizePath(dt.documentUri));
 
@@ -204,7 +173,7 @@ export function assignTemplateGraphToDeploymentTemplate(
         if (matchingScope) {
             //asdf reentrancy - precalculate?  No need to set param values source multiple times for COPY loop
             //matchingScope.linkedFileReferences?.push(linkReference);
-            matchingScope.assignLinkedFileReferences([linkReference], allLoadedTemplates);
+            matchingScope.assignLinkedFileReferences([linkReference], provideOpenDocuments);
         }
 
         //asdf

@@ -6,9 +6,9 @@
 
 import { Uri } from "vscode";
 import { deploymentsResourceTypeLC, templateKeys } from "../../../constants";
+import { IProvideOpenedDocuments } from "../../../IProvideOpenedDocuments";
 import * as Json from "../../../language/json/JSON";
 import { assertNever } from "../../../util/assertNever";
-import { NormalizedMap } from "../../../util/NormalizedMap";
 import { IParameterDefinition } from "../../parameters/IParameterDefinition";
 import { IParameterDefinitionsSource } from "../../parameters/IParameterDefinitionsSource";
 import { IParameterValuesSource } from "../../parameters/IParameterValuesSource";
@@ -404,7 +404,7 @@ export class LinkedTemplateScope extends TemplateScope implements IChildDeployme
 
     public assignLinkedFileReferences(
         linkedFileReferences: ILinkedTemplateReference[] | undefined,
-        allLoadedTemplates: NormalizedMap<Uri, DeploymentTemplateDoc>
+        provideOpenDocuments: IProvideOpenedDocuments
     ): void {
         this._linkedFileReferences = linkedFileReferences;
         this._linkedFileParameterDefinitionsSource.setParameterDefinitions([]);
@@ -416,7 +416,7 @@ export class LinkedTemplateScope extends TemplateScope implements IChildDeployme
             const parameterDefinitions: IParameterDefinition[] =
                 getParameterDefinitionsFromLinkedTemplate(
                     firstLinkedFileReference,
-                    allLoadedTemplates);
+                    provideOpenDocuments);
             this._linkedFileParameterDefinitionsSource.setParameterDefinitions(parameterDefinitions);
         }
     }
